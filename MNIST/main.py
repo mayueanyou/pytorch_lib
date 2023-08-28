@@ -1,19 +1,24 @@
-import torch,random,copy,os
-from torch import nn
+import os,sys,torch,random
 from torch.utils.data import Dataset,DataLoader
 from torchvision import datasets,transforms
 from torchvision.transforms import ToTensor
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 
-from path import*
+file_path=os.path.abspath(__file__)
+current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
+upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
+sys.path.append(upper_path)
 from trainer import Trainer, Net
 from net import*
 
 random.seed(0)
 torch.manual_seed(0)
 torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=10000, profile=None, sci_mode=False)
+
+def check_gpu():
+    if torch.cuda.is_available():print(torch.cuda.get_device_name(0))
+    else:print('No GPU')
 
 
 def main():
@@ -27,4 +32,5 @@ def main():
     trainer.train_test(100)
 
 if __name__ == '__main__':
+    check_gpu()
     main()
