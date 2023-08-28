@@ -151,3 +151,63 @@
 
 	Job terminated of its own accord at 2023-08-28T04:56:41Z with exit-code 0.
 ...
+000 (213.000.000) 2023-08-28 16:43:12 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1143_94d6>
+...
+001 (213.000.000) 2023-08-28 16:43:35 Job executing on host: <10.5.71.12:9618?addrs=10.5.71.12-9618&alias=CRUSH-NODE-10-5-71-12&noUDP&sock=startd_1177_e70f>
+...
+006 (213.000.000) 2023-08-28 16:43:43 Image size of job updated: 36256
+	17  -  MemoryUsage of job (MB)
+	17248  -  ResidentSetSize of job (KB)
+...
+006 (213.000.000) 2023-08-28 16:46:30 Image size of job updated: 14981468
+	17  -  MemoryUsage of job (MB)
+	17248  -  ResidentSetSize of job (KB)
+...
+005 (213.000.000) 2023-08-28 16:46:30 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:59, Sys 0 00:00:01  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:59, Sys 0 00:00:01  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        1         1 
+	   Disk (KB)            :        1        1     23078 
+	   GPUs                 :                           2 "GPU-e03fd37e,GPU-ccc7ea7c"
+	   Memory (MB)          :       17        1       128 
+
+	Job terminated of its own accord at 2023-08-28T20:46:30Z with exit-code 0.
+...
+000 (216.000.000) 2023-08-28 16:55:02 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1143_94d6>
+...
+001 (216.000.000) 2023-08-28 16:55:13 Job executing on host: <10.5.66.5:9618?addrs=10.5.66.5-9618&alias=CRUSH-NODE-10-5-66-5&noUDP&sock=startd_1165_abec>
+...
+006 (216.000.000) 2023-08-28 16:55:21 Image size of job updated: 114872
+	113  -  MemoryUsage of job (MB)
+	114872  -  ResidentSetSize of job (KB)
+...
+006 (216.000.000) 2023-08-28 16:56:37 Image size of job updated: 10561068
+	113  -  MemoryUsage of job (MB)
+	114872  -  ResidentSetSize of job (KB)
+...
+005 (216.000.000) 2023-08-28 16:56:37 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:48, Sys 0 00:00:02  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:48, Sys 0 00:00:02  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                 1         1 
+	   Disk (KB)            :        1        1     23153 
+	   GPUs                 :                           1 "GPU-c7801011"
+	   Memory (MB)          :      113        1       128 
+
+	Job terminated of its own accord at 2023-08-28T20:56:37Z with exit-code 0.
+...

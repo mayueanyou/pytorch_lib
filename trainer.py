@@ -1,10 +1,11 @@
-import torch,random,os,copy
+import torch,random,os,copy,sys
 from torch import nn
 from torch.utils.data import Dataset,DataLoader
 from torchvision import datasets,transforms
 from torchvision.transforms import ToTensor
 from torchsummary import summary
 import torch.nn.functional as F
+from tqdm import tqdm
 
 random.seed(0)
 torch.manual_seed(0)
@@ -151,8 +152,9 @@ class Trainer():
         wrap_val_eval(self.net)
       
     def train_test(self, epochs):
-        for t in range(epochs):
+        for t in tqdm(range(epochs)):
             print(f"Epoch {t+1}\n-------------------------------")
             self.train()
             self.test()
+            sys.stdout.flush()
             
