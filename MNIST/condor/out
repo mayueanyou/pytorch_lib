@@ -1,7 +1,7 @@
 NVIDIA A100 80GB PCIe
 FNN_1
-best accuracy: 87.86%
-best loss: 0.502813
+best accuracy: 90.54%
+best loss: 0.350633
 {}
 
 Epoch 1
