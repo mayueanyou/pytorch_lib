@@ -140,24 +140,19 @@ class Trainer():
                 return correct > model.best_accuracy, correct, test_loss
         
         def wrap_val_eval(model):
-            update,_,_ = evalue(model,self.validate_dataloader)
+            update,accuracy, loss = evalue(model,self.validate_dataloader)
+            print(f"Validate Error: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
             _,accuracy, loss = evalue(model,self.test_dataloader)
             print(f"Test Error: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
             if update: model.update_best_model(accuracy,loss)
+            print(f"Best Error: \n Accuracy: {(100*model.best_accuracy):>0.2f}%, Avg loss: {model.best_loss:>8f} \n")
 
         print('net:')
         wrap_val_eval(self.net)
-    
-    def write_result(self):
-        with open("result.txt",'w') as file:
-                file.write('Teacher: %f\n'%self.teacher.best_accuracy)
-                file.write('Student_base: %f\n'%self.student_base.best_accuracy)
-                file.write('Student: %f\n'%self.student.best_accuracy)
-    
+      
     def train_test(self, epochs):
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             self.train()
             self.test()
-            #self.write_result()
             

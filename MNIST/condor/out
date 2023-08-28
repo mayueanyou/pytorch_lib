@@ -15,8 +15,14 @@ Epoch 1
 [38400/50000]loss: 0.689287
 [44800/50000]loss: 0.743440
 net:
+Validate Error: 
+ Accuracy: 84.08%, Avg loss: 0.682850 
+
 Test Error: 
  Accuracy: 86.03%, Avg loss: 0.643415 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 2
 -------------------------------
@@ -29,8 +35,14 @@ Epoch 2
 [38400/50000]loss: 0.487787
 [44800/50000]loss: 0.593946
 net:
+Validate Error: 
+ Accuracy: 86.52%, Avg loss: 0.541081 
+
 Test Error: 
  Accuracy: 87.86%, Avg loss: 0.502813 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 3
 -------------------------------
@@ -43,8 +55,14 @@ Epoch 3
 [38400/50000]loss: 0.414755
 [44800/50000]loss: 0.536131
 net:
+Validate Error: 
+ Accuracy: 87.52%, Avg loss: 0.483879 
+
 Test Error: 
  Accuracy: 88.69%, Avg loss: 0.446502 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 4
 -------------------------------
@@ -57,8 +75,14 @@ Epoch 4
 [38400/50000]loss: 0.374083
 [44800/50000]loss: 0.503160
 net:
+Validate Error: 
+ Accuracy: 88.00%, Avg loss: 0.451424 
+
 Test Error: 
  Accuracy: 89.36%, Avg loss: 0.414723 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 5
 -------------------------------
@@ -71,8 +95,14 @@ Epoch 5
 [38400/50000]loss: 0.347190
 [44800/50000]loss: 0.480849
 net:
+Validate Error: 
+ Accuracy: 88.49%, Avg loss: 0.429940 
+
 Test Error: 
  Accuracy: 89.75%, Avg loss: 0.393788 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 6
 -------------------------------
@@ -85,8 +115,14 @@ Epoch 6
 [38400/50000]loss: 0.327653
 [44800/50000]loss: 0.464206
 net:
+Validate Error: 
+ Accuracy: 88.82%, Avg loss: 0.414404 
+
 Test Error: 
  Accuracy: 90.08%, Avg loss: 0.378716 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 7
 -------------------------------
@@ -99,8 +135,14 @@ Epoch 7
 [38400/50000]loss: 0.312590
 [44800/50000]loss: 0.450994
 net:
+Validate Error: 
+ Accuracy: 89.14%, Avg loss: 0.402508 
+
 Test Error: 
  Accuracy: 90.23%, Avg loss: 0.367222 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 8
 -------------------------------
@@ -113,8 +155,14 @@ Epoch 8
 [38400/50000]loss: 0.300493
 [44800/50000]loss: 0.440060
 net:
+Validate Error: 
+ Accuracy: 89.28%, Avg loss: 0.393026 
+
 Test Error: 
  Accuracy: 90.35%, Avg loss: 0.358097 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 9
 -------------------------------
@@ -127,7 +175,13 @@ Epoch 9
 [38400/50000]loss: 0.290489
 [44800/50000]loss: 0.430742
 net:
+Validate Error: 
+ Accuracy: 89.63%, Avg loss: 0.385243 
+
 Test Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
+
+Best Error: 
  Accuracy: 90.54%, Avg loss: 0.350633 
 
 Epoch 10
@@ -141,6 +195,12 @@ Epoch 10
 [38400/50000]loss: 0.282030
 [44800/50000]loss: 0.422630
 net:
+Validate Error: 
+ Accuracy: 89.85%, Avg loss: 0.378708 
+
 Test Error: 
  Accuracy: 90.67%, Avg loss: 0.344387 
+
+Best Error: 
+ Accuracy: 90.54%, Avg loss: 0.350633 
 
