@@ -29,7 +29,7 @@ def main():
     test_data = datasets.MNIST(root="../../datasets",train=False,download=True,transform=ToTensor(),)
     trainer = Trainer(training_data,test_data,validate_data,net)
     trainer.update_extra_info()
-    trainer.train_test(100)
+    trainer.train_test(10)
 
 if __name__ == '__main__':
     check_gpu()

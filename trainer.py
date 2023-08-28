@@ -15,7 +15,7 @@ class Net():
         self.net = net.to(self.device)
 
         self.best_accuracy = 0
-        self.best_loss = 0;
+        self.best_loss = 0
 
         self.base_path = './model/'
         self.train_model = True
@@ -75,7 +75,7 @@ class Net():
     def load(self,load_model):
         model_path = self.base_path+'%s.pt'%self.net.name
         if not os.path.isfile(model_path): return
-        data = torch.load(model_path)
+        data = torch.load(model_path ,map_location=self.device)
         self.best_accuracy = data['accuracy']
         self.best_loss = data['loss']
         if 'extra_info' in data.keys():
