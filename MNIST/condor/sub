@@ -1,0 +1,13 @@
+executable = /home/yma183/tools/conda_wrapper
+arguments = /home/yma183/lab/pytorch_template/MNIST/main.py
+
+error      = ./err
+output     = ./out
+log        = ./log
+
+Requirements = (TotalGPUs > 0) && CUDADeviceName != "Quadro RTX 5000" && CUDADeviceName != "Quadro RTX 6000"
+
++request_gpus = 1
+
+queue
+

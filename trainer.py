@@ -10,14 +10,14 @@ random.seed(0)
 torch.manual_seed(0)
 
 class Net():
-    def __init__(self,net,load,optimizer='SGD') -> None:
+    def __init__(self,net,load,model_path,optimizer='SGD') -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.net = net.to(self.device)
 
         self.best_accuracy = 0
         self.best_loss = 0
 
-        self.base_path = './model/'
+        self.base_path = model_path+'/model/'
         self.train_model = True
         self.save_model = True
 
