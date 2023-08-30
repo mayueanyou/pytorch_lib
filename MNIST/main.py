@@ -23,7 +23,8 @@ def check_gpu():
 
 
 def main():
-    net = Net(net = FNN_1(),load = False,model_path=current_path)
+    #net = Net(net = FNN_1(),load = False,model_path=current_path)
+    net = Net(net = ResNet_1(),load = False,model_path=current_path)
 
     training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=ToTensor(),)
     training_data, validate_data = torch.utils.data.random_split(training_data, [50000, 10000])
