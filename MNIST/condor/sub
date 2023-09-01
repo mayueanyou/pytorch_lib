@@ -5,7 +5,7 @@ error      = ./err
 output     = ./out
 log        = ./log
 
-Requirements = (TotalGPUs > 0) && CUDADeviceName != "Quadro RTX 5000" && CUDADeviceName != "Quadro RTX 6000"
+Requirements = (TotalGPUs > 0)
 
 +request_gpus = 1
 

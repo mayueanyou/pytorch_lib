@@ -1,19 +1,11 @@
-import torch,random,copy,os
+import os,torch
 from torch import nn
-from torch.utils.data import Dataset,DataLoader
-from torchvision import datasets,transforms
-from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 
-def cnn_cell(input_channel,output_channel,kernel_size,stride,pedding,relu=True,bias=True):
-    if relu:
-        return nn.Sequential(
-        nn.Conv2d(input_channel,output_channel,kernel_size,stride,pedding,bias=bias),
-        nn.BatchNorm2d(output_channel),nn.ReLU())
-    else:
-        return nn.Sequential(
-        nn.Conv2d(input_channel,output_channel,kernel_size,stride,pedding,bias=bias),
-        nn.BatchNorm2d(output_channel),)
+file_path=os.path.abspath(__file__)
+current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
+upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
+from net_library import*
 
 class FNN_1(nn.Module):
     def __init__(self):
@@ -28,6 +20,20 @@ class FNN_1(nn.Module):
         x = self.fc1(x)
         return x,x
 
+class FNN_2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.name = 'FNN_2'
+        self.input_size = (1,28,28)
+
+        self.fc1 = nn.Linear(784, 32)
+        self.fc2 = nn.Linear(32, 10)
+
+    def forward(self,x):
+        x = x.view(-1, 784)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x,x
 
 class CNN_1(nn.Module):
     class Cell(nn.Module):
@@ -64,25 +70,8 @@ class CNN_1(nn.Module):
         for layer in self.layers: result.append(layer(x))
         x = torch.cat(result, dim=1)
         return x,x
-    
-class ResNet_1(nn.Module):
-    class Cell(nn.Module):
-        def __init__(self, input_channel, output_channel, stride, downsample=None):
-            super().__init__()
-            self.conv1 = cnn_cell(input_channel,output_channel,3,stride,1)
-            self.conv2 = cnn_cell(output_channel,output_channel,3,1,1,relu=False)
-            self.downsample = downsample
-            self.stride = stride
 
-        def forward(self, x):
-            residual = x
-            out = self.conv1(x)
-            out = self.conv2(out)
-            if self.downsample is not None: residual = self.downsample(residual)
-            out += residual
-            out = F.relu(out)
-            return out
-        
+class ResNet_1(nn.Module):
     def __init__(self):
         super().__init__()
         self.name = 'ResNet_1'
@@ -98,13 +87,18 @@ class ResNet_1(nn.Module):
         self.fc = nn.Linear(512, 10)
 
     def make_layer(self,input_channel,output_channel,number,stride):
+        def create_cell(input_channel,output_channel,stride):
+            layers = [cnn_cell(input_channel,output_channel,3,stride,1)]#,
+            #          cnn_cell(output_channel,output_channel,3,1,1,relu=False)]
+            return nn.Sequential(*layers)
+        
         downsample = None
         if stride != 1 or input_channel != output_channel:
             downsample = cnn_cell(input_channel,output_channel,1,stride,0,relu=False)
         layers = []
-        layers.append(self.Cell(input_channel, output_channel, stride, downsample))
+        layers.append(Residual(create_cell(input_channel,output_channel,stride),downsample))
         for i in range(1, number):
-            layers.append(self.Cell(output_channel, output_channel,1))
+            layers.append(Residual(create_cell(output_channel,output_channel,1)))
         return nn.Sequential(*layers)
 
     def forward(self,x):

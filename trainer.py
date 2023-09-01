@@ -11,14 +11,15 @@ random.seed(0)
 torch.manual_seed(0)
 
 class Net():
-    def __init__(self,net,load,model_path,optimizer='SGD') -> None:
+    def __init__(self,net,load,model_path,optimizer='Adam') -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.net = net.to(self.device)
 
-        self.best_accuracy = 0
-        self.best_loss = 0
+        self.best_validate_accuracy = 0
+        self.best_test_accuracy = 0
+        self.best_test_loss = 0
 
-        self.base_path = model_path+'/model/'
+        self.base_path = model_path
         self.train_model = True
         self.save_model = True
 
@@ -36,8 +37,9 @@ class Net():
 
     def print_info(self):
         print(self.net.name)
-        print(f'best accuracy: {(self.best_accuracy*100):>0.2f}%')
-        print(f'best loss: {self.best_loss:>8f}')
+        print(f'best validate accuracy: {(self.best_validate_accuracy*100):>0.2f}%')
+        print(f'best test accuracy: {(self.best_test_accuracy*100):>0.2f}%')
+        print(f'best test loss: {self.best_test_loss:>8f}')
         print(self.best_extra_info)
         #summary(self.net.cuda(), input_size = self.net.input_size, batch_size = -1)
         print()
@@ -62,23 +64,28 @@ class Net():
         self.net.name = self.net.name + '_' + postfix
         self.load(load)
     
-    def update_best_model(self,accuracy,loss):
-        self.best_accuracy = accuracy
-        self.best_loss = loss
+    def update_best_model(self,valid_accuracy,test_accuracy,test_loss):
+        self.best_validate_accuracy = valid_accuracy
+        self.best_test_accuracy = test_accuracy
+        self.best_test_loss = test_loss
         if self.save_model: self.save()
         
     def save(self):
         model_path = self.base_path+'%s.pt'%self.net.name
-        data = {'accuracy':self.best_accuracy,'loss':self.best_loss,'net':self.net.state_dict(),'optimizer':self.optimizer,
-                'learning rate':self.learning_rate,'extra_info':self.extra_info}
+        data = {'test_accuracy':self.best_test_accuracy,'test_loss':self.best_test_loss,'net':self.net.state_dict(),'optimizer':self.optimizer,
+                'validate_accuracy':self.best_validate_accuracy,'learning rate':self.learning_rate,'extra_info':self.extra_info}
         torch.save(data,model_path)
+        print('----------------')
+        print('save model')
+        print('----------------')
     
     def load(self,load_model):
         model_path = self.base_path+'%s.pt'%self.net.name
         if not os.path.isfile(model_path): return
         data = torch.load(model_path ,map_location=self.device)
-        self.best_accuracy = data['accuracy']
-        self.best_loss = data['loss']
+        self.best_test_accuracy = data['test_accuracy']
+        self.best_validate_accuracy  = data['validate_accuracy']
+        self.best_test_loss = data['test_loss']
         if 'extra_info' in data.keys():
             self.best_extra_info = data['extra_info']
         if load_model: self.net.load_state_dict(data['net'])
@@ -134,19 +141,20 @@ class Trainer():
 
                     pred,feature = model.net(X)
                     test_loss += self.loss_fn(pred, y).item()
+                    pred = F.softmax(pred,dim=1)
                     correct += (pred.argmax(1) == y).type(torch.float).sum().item()
                 test_loss /= num_batches
                 correct /= size
 
-                return correct > model.best_accuracy, correct, test_loss
+                return correct > model.best_validate_accuracy, correct, test_loss
         
         def wrap_val_eval(model):
-            update,accuracy, loss = evalue(model,self.validate_dataloader)
-            print(f"Validate Error: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
-            _,accuracy, loss = evalue(model,self.test_dataloader)
-            print(f"Test Error: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
-            if update: model.update_best_model(accuracy,loss)
-            print(f"Best Error: \n Accuracy: {(100*model.best_accuracy):>0.2f}%, Avg loss: {model.best_loss:>8f} \n")
+            update,validate_accuracy, validate_loss = evalue(model,self.validate_dataloader)
+            print(f"Validate: \n Accuracy: {(100*validate_accuracy):>0.2f}%, Avg loss: {validate_loss:>8f} \n")
+            _,test_accuracy, test_loss = evalue(model,self.test_dataloader)
+            print(f"Test: \n Accuracy: {(100*test_accuracy):>0.2f}%, Avg loss: {test_loss:>8f} \n")
+            if update: model.update_best_model(validate_accuracy,test_accuracy, test_loss)
+            print(f"Best: \n Accuracy: {(100*model.best_test_accuracy):>0.2f}%, Avg loss: {model.best_test_loss:>8f} \n")
 
         print('net:')
         wrap_val_eval(self.net)
