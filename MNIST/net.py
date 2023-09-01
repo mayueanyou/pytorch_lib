@@ -88,8 +88,8 @@ class ResNet_1(nn.Module):
 
     def make_layer(self,input_channel,output_channel,number,stride):
         def create_cell(input_channel,output_channel,stride):
-            layers = [cnn_cell(input_channel,output_channel,3,stride,1)]#,
-            #          cnn_cell(output_channel,output_channel,3,1,1,relu=False)]
+            layers = [cnn_cell(input_channel,output_channel,3,stride,1),
+                      cnn_cell(output_channel,output_channel,3,1,1,relu=False)]
             return nn.Sequential(*layers)
         
         downsample = None
