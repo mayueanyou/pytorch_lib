@@ -64,15 +64,18 @@ class Trainer():
                 test_loss /= num_batches
                 correct /= size
 
-                return correct > model.best_validate_accuracy, correct, test_loss
+                return correct > model.basic_info['best_validate_accuracy'], correct, test_loss
+        
+        def print_result(name,accuracy,loss):
+            print(f"{name}: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
         
         def wrap_val_eval(model):
             update,validate_accuracy, validate_loss = evalue(model,self.validate_dataloader)
-            print(f"Validate: \n Accuracy: {(100*validate_accuracy):>0.2f}%, Avg loss: {validate_loss:>8f} \n")
             _,test_accuracy, test_loss = evalue(model,self.test_dataloader)
-            print(f"Test: \n Accuracy: {(100*test_accuracy):>0.2f}%, Avg loss: {test_loss:>8f} \n")
-            if update: model.update_best_model(validate_accuracy,test_accuracy, test_loss)
-            print(f"Best: \n Accuracy: {(100*model.best_test_accuracy):>0.2f}%, Avg loss: {model.best_test_loss:>8f} \n")
+            if update: model.update_best_model(validate_accuracy, test_accuracy, test_loss)
+            print_result('Validate',validate_accuracy,validate_loss)
+            print_result('Test',test_accuracy,test_loss)
+            print_result('Best',model.basic_info['best_test_accuracy'],model.basic_info['best_test_loss'])
 
         print('net:')
         wrap_val_eval(self.net)

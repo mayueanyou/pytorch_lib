@@ -8,24 +8,29 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 
 class Net():
-    def __init__(self,net,load,model_path,optimizer='Adam') -> None:
+    def __init__(self,net,load,model_folder_path,optimizer='Adam') -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         if torch.cuda.is_available():print(torch.cuda.get_device_name(0)) 
         else:print('No GPU')
+
         self.net = net.to(self.device)
+        #summary(self.net, self.net.input_size)
+        total_params = sum(p.numel() for p in self.net.parameters())
 
-        self.best_validate_accuracy = 0
-        self.best_test_accuracy = 0
-        self.best_test_loss = 0
+        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,
+                           'best_validate_accuracy':0,'learning rate':0,'parameters':total_params}
+        
+        self.extra_info = {}
 
-        self.base_path = model_path
+        self.model_folder_path = model_folder_path
+        if not os.path.exists(model_folder_path): os.makedirs(model_folder_path)
+        
         self.train_model = True
         self.save_model = True
 
         self.learning_rate = 0.001
         self.optimizer_select = optimizer
-        self.extra_info = {}
-        self.best_extra_info = None
+
 
         self.load(load)
         if load:
@@ -33,14 +38,16 @@ class Net():
             self.save_model = False
 
         self.update_optimizer()
+    
+    def model_path(self):
+        return self.model_folder_path + '%s.pt'%self.net.name
 
     def print_info(self):
-        print(self.net.name)
-        print(f'best validate accuracy: {(self.best_validate_accuracy*100):>0.2f}%')
-        print(f'best test accuracy: {(self.best_test_accuracy*100):>0.2f}%')
-        print(f'best test loss: {self.best_test_loss:>8f}')
-        print(self.best_extra_info)
-        #summary(self.net.cuda(), input_size = self.net.input_size, batch_size = -1)
+        print('module name: ',self.net.name)
+        print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
+        print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
+        print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
+        print(f'total parameters: {self.basic_info["parameters"]}')
         print()
     
     def train(self,input_data,label,loss_fn,bp):
@@ -63,30 +70,22 @@ class Net():
         self.net.name = self.net.name + '_' + postfix
         self.load(load)
     
-    def update_best_model(self,valid_accuracy,test_accuracy,test_loss):
-        self.best_validate_accuracy = valid_accuracy
-        self.best_test_accuracy = test_accuracy
-        self.best_test_loss = test_loss
+    def update_best_model(self,validate_accuracy,test_accuracy,test_loss):
+        self.basic_info["best_validate_accuracy"] = validate_accuracy
+        self.basic_info["best_test_accuracy"] = test_accuracy
+        self.basic_info["best_test_loss"] = test_loss
         if self.save_model: self.save()
         
     def save(self):
-        model_path = self.base_path+'%s.pt'%self.net.name
-        data = {'test_accuracy':self.best_test_accuracy,'test_loss':self.best_test_loss,'net':self.net.state_dict(),'optimizer':self.optimizer,
-                'validate_accuracy':self.best_validate_accuracy,'learning rate':self.learning_rate,'extra_info':self.extra_info}
-        torch.save(data,model_path)
-        print('----------------')
-        print('save model')
-        print('----------------')
+        data = {'net':self.net.state_dict(),'basic_info':self.basic_info,'extra_info':self.extra_info}
+        torch.save(data,self.model_path())
+        print('----------------','save model','----------------')
     
     def load(self,load_model):
-        model_path = self.base_path+'%s.pt'%self.net.name
-        if not os.path.isfile(model_path): return
-        data = torch.load(model_path ,map_location=self.device)
-        self.best_test_accuracy = data['test_accuracy']
-        self.best_validate_accuracy  = data['validate_accuracy']
-        self.best_test_loss = data['test_loss']
-        if 'extra_info' in data.keys():
-            self.best_extra_info = data['extra_info']
+        if not os.path.isfile(self.model_path()): return
+        data = torch.load(self.model_path() ,map_location=self.device)
+        self.basic_info = data['basic_info']
+        self.best_extra_info = data['extra_info']
         if load_model: self.net.load_state_dict(data['net'])
         self.update_optimizer()
         self.print_info()
