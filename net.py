@@ -86,6 +86,8 @@ class Net():
         data = torch.load(self.model_path() ,map_location=self.device)
         self.basic_info = data['basic_info']
         self.best_extra_info = data['extra_info']
-        if load_model: self.net.load_state_dict(data['net'])
+        if load_model: 
+            self.net.load_state_dict(data['net'])
+            print('----------------','load model','----------------')
         self.update_optimizer()
         self.print_info()

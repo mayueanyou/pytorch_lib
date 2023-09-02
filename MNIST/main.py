@@ -28,7 +28,7 @@ def reset_dataset(dataset,targets):
 
 
 def main():
-    net = Net(net = FNN_1(),load = False,model_folder_path=current_path+'/model/')
+    net = Net(net = FNN_1(),load = True,model_folder_path=current_path+'/model/')
     #net = Net(net = ResNet_1(),load = False,model_path=current_path+'/model/')
     #net = Net(net = FNN_2(),load = False,model_path=current_path+'/model/')
 
