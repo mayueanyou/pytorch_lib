@@ -1,8 +1,0 @@
-with bn init
-Best: 
- Accuracy: 98.86%, Avg loss: 0.034547
-
-
-without bn init
- Best: 
- Accuracy: 98.92%, Avg loss: 0.041657 
