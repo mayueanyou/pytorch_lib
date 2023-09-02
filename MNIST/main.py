@@ -10,18 +10,15 @@ current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
 upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
 upper_upper_path = os.path.abspath(os.path.dirname(upper_path) + os.path.sep + ".")
 sys.path.append(upper_path)
-from trainer import Trainer, Net
+from trainer import*
 from net import*
+from module import*
 
 random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 np.random.seed(0)
 torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=10000, profile=None, sci_mode=False)
-
-def check_gpu():
-    if torch.cuda.is_available():print(torch.cuda.get_device_name(0))
-    else:print('No GPU')
 
 def reset_dataset(dataset,targets):
     idx = sum(dataset.targets==i for i in targets).bool()
@@ -38,7 +35,7 @@ def main():
     training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=ToTensor(),)
     training_data, validate_data = torch.utils.data.random_split(training_data, [50000, 10000])
     test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=ToTensor(),)
-    trainer = Trainer(training_data,test_data,validate_data,net)
+    trainer = Trainer(net,training_data,test_data,validate_data)
     trainer.update_extra_info()
     trainer.train_test(10)
 
@@ -83,6 +80,5 @@ def test():
         #break
 
 if __name__ == '__main__':
-    check_gpu()
     main()
     #test()
