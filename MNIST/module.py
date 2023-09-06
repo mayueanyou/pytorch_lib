@@ -2,7 +2,7 @@ import os,torch
 from torch import nn
 import torch.nn.functional as F
 
-file_path=os.path.abspath(__file__)
+file_path = os.path.abspath(__file__)
 current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
 upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
 from net_library import*
@@ -10,7 +10,7 @@ from net_library import*
 class FNN_1(nn.Module):
     def __init__(self):
         super().__init__()
-        self.name = 'FNN_1'
+        self.name = type(self).__name__
         self.input_size = (1,28,28)
 
         self.fc1 = nn.Linear(784, 10)
@@ -23,7 +23,7 @@ class FNN_1(nn.Module):
 class FNN_2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.name = 'FNN_2'
+        self.name = type(self).__name__
         self.input_size = (1,28,28)
 
         self.fc1 = nn.Linear(784, 32)
@@ -59,7 +59,7 @@ class CNN_1(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.name = 'CNN_1_t'
+        self.name = type(self).__name__
         self.input_size = (1,28,28)
         self.input_dim = self.input_size[0]*self.input_size[1]*self.input_size[2]
 
@@ -74,7 +74,7 @@ class CNN_1(nn.Module):
 class ResNet_1(nn.Module):
     def __init__(self):
         super().__init__()
-        self.name = 'ResNet_1'
+        self.name = type(self).__name__
         self.input_size = (1,28,28)
 
         self.conv1 = cnn_cell(self.input_size[0],64,7,2,3,bias=False)

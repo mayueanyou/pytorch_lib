@@ -11,14 +11,13 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 
 class Trainer():
-    def __init__(self,net,training_data=None,test_data=None,validate_data=None):
+    def __init__(self,net,train_data=None,test_data=None,validate_data=None):
         super().__init__()
-        self.batch_size = 64
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-        self.train_dataloader = DataLoader(training_data, batch_size=self.batch_size) if training_data is not None else None
-        self.test_dataloader = DataLoader(test_data, batch_size=self.batch_size) if test_data is not None else None
-        self.validate_dataloader = DataLoader(validate_data, batch_size=self.batch_size) if validate_data is not None else None
+        self.train_dataloader = train_data
+        self.test_dataloader = test_data
+        self.validate_dataloader = validate_data
 
         self.net = net
 

@@ -1,4 +1,4 @@
-import os,sys,torch,random
+import os,sys,torch,random,argparse
 from torch.utils.data import Dataset,DataLoader
 from torchvision import datasets,transforms
 from torchvision.transforms import ToTensor
@@ -13,6 +13,7 @@ sys.path.append(upper_path)
 from trainer import*
 from net import*
 from module import*
+from datasetloader import*
 
 random.seed(0)
 torch.manual_seed(0)
@@ -27,15 +28,15 @@ def reset_dataset(dataset,targets):
     return dataset
 
 
-def main():
-    net = Net(net = FNN_1(),load = True,model_folder_path=current_path+'/model/')
-    #net = Net(net = ResNet_1(),load = False,model_path=current_path+'/model/')
-    #net = Net(net = FNN_2(),load = False,model_path=current_path+'/model/')
+def main(name):
+    net = Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/')
 
     training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=ToTensor(),)
-    training_data, validate_data = torch.utils.data.random_split(training_data, [50000, 10000])
     test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=ToTensor(),)
-    trainer = Trainer(net,training_data,test_data,validate_data)
+    
+    dataset_loader = DatasetLoader(training_data,test_data)
+    train_data,test_data,validate_data = dataset_loader.get_loaders()
+    trainer = Trainer(net,train_data,test_data,validate_data)
     trainer.update_extra_info()
     trainer.train_test(10)
 
@@ -80,5 +81,8 @@ def test():
         #break
 
 if __name__ == '__main__':
-    main()
-    #test()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-net', type=str)
+    parser.add_argument('-f','--function', type=str)
+    args = parser.parse_args()
+    getattr(sys.modules[__name__], args.function)(args.net)

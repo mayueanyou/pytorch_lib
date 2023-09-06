@@ -16,6 +16,8 @@ class Net():
         self.net = net.to(self.device)
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
+        print('module name: ',self.net.name)
+        print(f'total parameters: {total_params:,}')
 
         self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,
                            'best_validate_accuracy':0,'learning rate':0,'parameters':total_params}
@@ -43,11 +45,10 @@ class Net():
         return self.model_folder_path + '%s.pt'%self.net.name
 
     def print_info(self):
-        print('module name: ',self.net.name)
         print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
-        print(f'total parameters: {self.basic_info["parameters"]}')
+        print(f'total parameters: {self.basic_info["parameters"]:,}')
         print()
     
     def train(self,input_data,label,loss_fn,bp):
@@ -71,10 +72,11 @@ class Net():
         self.load(load)
     
     def update_best_model(self,validate_accuracy,test_accuracy,test_loss):
+        if not self.save_model: return
         self.basic_info["best_validate_accuracy"] = validate_accuracy
         self.basic_info["best_test_accuracy"] = test_accuracy
         self.basic_info["best_test_loss"] = test_loss
-        if self.save_model: self.save()
+        self.save()
         
     def save(self):
         data = {'net':self.net.state_dict(),'basic_info':self.basic_info,'extra_info':self.extra_info}
