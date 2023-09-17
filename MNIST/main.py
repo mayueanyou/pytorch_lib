@@ -21,24 +21,22 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=10000, profile=None, sci_mode=False)
 
-def reset_dataset(dataset,targets):
-    idx = sum(dataset.targets==i for i in targets).bool()
-    dataset.data = dataset.data[idx]
-    dataset.targets = dataset.targets[idx]
-    return dataset
-
+def train(net,epoch,transform,target_list=None,label_setup=None):
+    training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=transform)
+    test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=transform)
+    dataset_loader = DatasetLoader(training_data,test_data)
+    training_data,test_data,validate_data = dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup)
+    
+    trainer = Trainer(net,training_data,test_data,validate_data)
+    trainer.update_extra_info()
+    trainer.train_test(epoch)
 
 def main(name):
     net = Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/')
+    target_list=None
+    label_setup=None
 
-    training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=ToTensor(),)
-    test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=ToTensor(),)
-    
-    dataset_loader = DatasetLoader(training_data,test_data)
-    train_data,test_data,validate_data = dataset_loader.get_loaders()
-    trainer = Trainer(net,train_data,test_data,validate_data)
-    trainer.update_extra_info()
-    trainer.train_test(10)
+    train(net,10,ToTensor(),target_list=target_list,label_setup=label_setup)
 
 def test():
     def test_net(num,data,net):
