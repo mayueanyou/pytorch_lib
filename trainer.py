@@ -10,6 +10,26 @@ torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 np.random.seed(0)
 
+class CELoss():
+    def __init__(self) -> None:
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+        
+    def calculate_correct(self,pred,label):
+        return (pred.argmax(1) == label).type(torch.float).sum().item()
+
+class MSELoss_Binary():
+    def __init__(self) -> None:
+        self.loss_fn = nn.MSELoss()
+        self.threshold = 0.5
+    
+    def calculate_correct(self,pred,label):
+        temp_p = torch.zeros((len(label),1))
+        if torch.any(pred>self.threshold):
+            temp_p[pred>self.threshold] = 1.0
+        pred = temp_p
+        correct = ((pred>self.threshold) == (label>self.threshold)).type(torch.float).sum().item()
+        return correct
+
 class Trainer():
     def __init__(self,net,train_data=None,test_data=None,validate_data=None):
         super().__init__()
@@ -20,8 +40,10 @@ class Trainer():
         self.validate_dataloader = validate_data
 
         self.net = net
+        
+        self.loss = CELoss()
 
-        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+        self.loss_fn = self.loss.loss_fn
     
     def update_extra_info(self):
         pass
@@ -59,7 +81,7 @@ class Trainer():
                     pred,feature = model.net(X)
                     test_loss += self.loss_fn(pred, y).item()
                     pred = F.softmax(pred,dim=1)
-                    correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+                    correct += self.loss.calculate_correct(pred,y)
                 test_loss /= num_batches
                 correct /= size
 
