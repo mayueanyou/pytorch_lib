@@ -15,7 +15,11 @@ class CELoss():
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
         
     def calculate_correct(self,pred,label):
+        pred = F.softmax(pred,dim=1)
         return (pred.argmax(1) == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        return self.loss_fn(pred,label)      
 
 class MSELoss_Binary():
     def __init__(self) -> None:
@@ -29,6 +33,10 @@ class MSELoss_Binary():
         pred = temp_p
         correct = ((pred>self.threshold) == (label>self.threshold)).type(torch.float).sum().item()
         return correct
+    
+    def calculate_loss(self,pred,label):
+        loss = self.loss_fn(pred.view(-1),label.float())
+        return loss
 
 class Trainer():
     def __init__(self,net,train_data=None,test_data=None,validate_data=None):
@@ -80,7 +88,6 @@ class Trainer():
 
                     pred,feature = model.net(X)
                     test_loss += self.loss_fn(pred, y).item()
-                    pred = F.softmax(pred,dim=1)
                     correct += self.loss.calculate_correct(pred,y)
                 test_loss /= num_batches
                 correct /= size
