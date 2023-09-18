@@ -40,3 +40,15 @@ class DatasetLoader():
         test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
         test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
         return train_data,test_data,validate_data
+
+class RGB_Add_Gray:
+    def __init__(self) -> None:
+        pass
+
+    def __call__(self, pic):
+        pic = F.to_tensor(pic)
+        gray_pic = F.rgb_to_grayscale(pic)
+        return torch.cat((pic,gray_pic))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
