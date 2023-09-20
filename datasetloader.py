@@ -6,14 +6,14 @@ class DatasetLoader():
     def __init__(self,train_data,test_data,batch_size = 64) -> None:
         self.batch_size = batch_size
         self.train_data = train_data
-        self.train_data.targets = torch.tensor(self.train_data.targets)
+        if not torch.is_tensor(self.train_data.targets): self.train_data.targets = torch.tensor(self.train_data.targets)
         self.test_data = test_data
-        self.test_data.targets = torch.tensor(self.test_data.targets)
+        if not torch.is_tensor(self.test_data.targets): self.test_data.targets = torch.tensor(self.test_data.targets)
     
     def print_info(self,train,test,validate):
         print(f'batch size: {self.batch_size}')
         print(f'data in total:  train[{len(train)}] test[{len(test)}] validate[{len(validate)}]')
-        print(f'data per batch: train[{len(train)/self.batch_size}] test[{len(test)/self.batch_size}] validate[{len(validate)/self.batch_size}]')
+        print(f'data per batch: train[{len(train)/self.batch_size}] test[{len(test)/self.batch_size}] validate[{len(validate)/self.batch_size}]\n')
     
     def get_loaders(self,target_list=None,label_setup=None):
         training_data,test_data,validate_data = self.dataset_reset(target_list,label_setup)

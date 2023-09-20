@@ -1,17 +1,13 @@
 import os,sys,torch,random
 from torchsummary import summary
 import numpy as np
-
-random.seed(0)
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
-np.random.seed(0)
+from sklearn.metrics import confusion_matrix
+import pandas as pd
 
 class Net():
-    def __init__(self,net,load,model_folder_path,optimizer='Adam') -> None:
+    def __init__(self,net,load,model_folder_path,optimizer='Adam',loss=None) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        if torch.cuda.is_available():print(torch.cuda.get_device_name(0)) 
-        else:print('No GPU')
+        print(torch.cuda.get_device_name(0)) if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
         #summary(self.net, self.net.input_size)
@@ -32,7 +28,7 @@ class Net():
 
         self.learning_rate = 0.001
         self.optimizer_select = optimizer
-
+        self.loss = loss
 
         self.load(load)
         if load:
@@ -41,6 +37,7 @@ class Net():
 
         self.update_optimizer()
     
+    
     def model_path(self):
         return self.model_folder_path + '%s.pt'%self.net.name
 
@@ -48,21 +45,13 @@ class Net():
         print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
-        print(f'total parameters: {self.basic_info["parameters"]:,}')
-        print()
+        print(f'total parameters: {self.basic_info["parameters"]:,}\n')
     
-    def train(self,input_data,label,loss_fn,bp):
-        pred,feature = self.net(input_data)
-        loss = loss_fn(pred,label)
-        if self.train_model and bp:
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        return pred,feature,loss
+    #------------------------update_function------------------------
+    
+    def update_loss_object(self,loss):
+        self.loss = loss
    
-    def net_setup(self):
-        self.net.train() if self.train_model else self.net.eval()
-    
     def update_optimizer(self):
         if self.optimizer_select == 'SGD': self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=0.9)
         elif self.optimizer_select == 'Adam': self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate, weight_decay=0)
@@ -77,11 +66,13 @@ class Net():
         self.basic_info["best_test_accuracy"] = test_accuracy
         self.basic_info["best_test_loss"] = test_loss
         self.save()
+    
+     #------------------------save&load------------------------
         
     def save(self):
         data = {'net':self.net.state_dict(),'basic_info':self.basic_info,'extra_info':self.extra_info}
         torch.save(data,self.model_path())
-        print('----------------','save model','----------------')
+        print('------------------------','save model','------------------------')
     
     def load(self,load_model):
         if not os.path.isfile(self.model_path()): return
@@ -90,6 +81,37 @@ class Net():
         self.best_extra_info = data['extra_info']
         if load_model: 
             self.net.load_state_dict(data['net'])
-            print('----------------','load model','----------------')
+            print('------------------------','load model','------------------------')
         self.update_optimizer()
         self.print_info()
+    
+    #------------------------nn_function------------------------
+    
+    def net_setup(self):
+        self.net.train() if self.train_model else self.net.eval()
+    
+    def train(self,input_data,label,bp):
+        pred,feature = self.net(input_data)
+        loss = self.loss.loss_fn(pred,label)
+        if self.train_model and bp:
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+        return pred,feature,loss
+    
+    def evalue(self,dataloader):
+        size = len(dataloader.dataset)
+        num_batches = len(dataloader)
+        self.net.eval()
+        test_loss, correct = 0, 0
+
+        with torch.no_grad():
+            for X, y in dataloader:
+                X, y = X.to(self.device), y.to(self.device)
+                pred,feature = self.net(X)
+                test_loss += self.loss.loss_fn(pred, y).item()
+                correct += self.loss.calculate_correct(pred,y)
+            test_loss /= num_batches
+            correct /= size
+            return correct > self.basic_info['best_validate_accuracy'], correct, test_loss
+    

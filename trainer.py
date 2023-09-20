@@ -1,42 +1,6 @@
 import os,sys,copy,torch,random
 import numpy as np
-from torch import nn
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
 from tqdm import tqdm
-
-random.seed(0)
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
-np.random.seed(0)
-
-class CELoss():
-    def __init__(self) -> None:
-        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
-        
-    def calculate_correct(self,pred,label):
-        pred = F.softmax(pred,dim=1)
-        return (pred.argmax(1) == label).type(torch.float).sum().item()
-    
-    def calculate_loss(self,pred,label):
-        return self.loss_fn(pred,label)      
-
-class MSELoss_Binary():
-    def __init__(self) -> None:
-        self.loss_fn = nn.MSELoss()
-        self.threshold = 0.5
-    
-    def calculate_correct(self,pred,label):
-        temp_p = torch.zeros((len(label),1))
-        if torch.any(pred>self.threshold):
-            temp_p[pred>self.threshold] = 1.0
-        pred = temp_p
-        correct = ((pred>self.threshold) == (label>self.threshold)).type(torch.float).sum().item()
-        return correct
-    
-    def calculate_loss(self,pred,label):
-        loss = self.loss_fn(pred.view(-1),label.float())
-        return loss
 
 class Trainer():
     def __init__(self,net,train_data=None,test_data=None,validate_data=None):
@@ -48,10 +12,6 @@ class Trainer():
         self.validate_dataloader = validate_data
 
         self.net = net
-        
-        self.loss = CELoss()
-
-        self.loss_fn = self.loss.loss_fn
     
     def update_extra_info(self):
         pass
@@ -72,34 +32,16 @@ class Trainer():
         for batch, (X, y) in enumerate(self.train_dataloader):
             X, y = X.to(self.device), y.to(self.device)
 
-            pred,feature,loss = self.net.train(X,y,self.loss_fn,True)
+            pred,feature,loss = self.net.train(X,y,True)
             print_loss(batch,loss)
     
     def test(self):
-        def evalue(model,dataloader):
-            size = len(dataloader.dataset)
-            num_batches = len(dataloader)
-            model.net.eval()
-            test_loss, correct = 0, 0
-
-            with torch.no_grad():
-                for X, y in dataloader:
-                    X, y = X.to(self.device), y.to(self.device)
-
-                    pred,feature = model.net(X)
-                    test_loss += self.loss_fn(pred, y).item()
-                    correct += self.loss.calculate_correct(pred,y)
-                test_loss /= num_batches
-                correct /= size
-
-                return correct > model.basic_info['best_validate_accuracy'], correct, test_loss
-        
         def print_result(name,accuracy,loss):
             print(f"{name}: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
         
         def wrap_val_eval(model):
-            update,validate_accuracy, validate_loss = evalue(model,self.validate_dataloader)
-            _,test_accuracy, test_loss = evalue(model,self.test_dataloader)
+            update,validate_accuracy, validate_loss = self.net.evalue(self.validate_dataloader)
+            _,test_accuracy, test_loss = self.net.evalue(self.test_dataloader)
             if update: model.update_best_model(validate_accuracy, test_accuracy, test_loss)
             print_result('Validate',validate_accuracy,validate_loss)
             print_result('Test',test_accuracy,test_loss)

@@ -14,6 +14,7 @@ from trainer import*
 from net import*
 from module import*
 from datasetloader import*
+from loss import*
 
 random.seed(0)
 torch.manual_seed(0)
@@ -31,14 +32,24 @@ def train(net,epoch,transform,target_list=None,label_setup=None):
     trainer.update_extra_info()
     trainer.train_test(epoch)
 
+def test(net,transform,target_list=None,label_setup=None):
+    training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=transform)
+    test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=transform)
+    dataset_loader = DatasetLoader(training_data,test_data)
+    training_data,test_data,validate_data = dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup)
+    
+    trainer = Trainer(net,training_data,test_data,validate_data)
+    trainer.test()
+
 def main(name):
-    net = Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/')
+    net = Net(net = getattr(sys.modules[__name__], name)(),load = True,model_folder_path=current_path+'/model/',loss=CELoss())
     target_list=None
     label_setup=None
 
-    train(net,10,ToTensor(),target_list=target_list,label_setup=label_setup)
+    #train(net,10,ToTensor(),target_list=target_list,label_setup=label_setup)
+    test(net,ToTensor(),target_list=target_list,label_setup=label_setup)
 
-def test():
+def test_new():
     def test_net(num,data,net):
         with torch.no_grad():
             print(net.net.name)
