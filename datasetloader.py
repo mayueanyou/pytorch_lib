@@ -12,11 +12,11 @@ class DatasetLoader():
     def print_info(self,train,test,validate,batch_size):
         print(f'batch size: {batch_size}')
         print(f'data in total:  train[{len(train)}] test[{len(test)}] validate[{len(validate)}]')
-        print(f'data per batch: train[{len(train)/self.batch_size}] test[{len(test)/self.batch_size}] validate[{len(validate)/self.batch_size}]\n')
+        print(f'data per batch: train[{len(train)/batch_size}] test[{len(test)/batch_size}] validate[{len(validate)/batch_size}]\n')
     
     def get_loaders(self,target_list=None,label_setup=None,batch_size = 64):
         training_data,test_data,validate_data = self.dataset_reset(target_list,label_setup)
-        self.print_info(training_data,test_data,validate_data)
+        self.print_info(training_data,test_data,validate_data,batch_size)
         train_dataloader = DataLoader(training_data, batch_size = batch_size)
         test_dataloader = DataLoader(test_data, batch_size = batch_size)
         validate_dataloader = DataLoader(validate_data, batch_size = batch_size)
