@@ -16,9 +16,6 @@ class Trainer():
     def update_extra_info(self):
         pass
     
-    def setup_model(self):
-        self.net.net_setup()
-    
     def train(self):
         def print_loss(batch,loss):
             if batch % 100 == 0:
@@ -27,8 +24,6 @@ class Trainer():
                 print(f"loss: {loss:>7f}")
 
         size = len(self.train_dataloader.dataset)
-        self.setup_model()
-
         for batch, (X, y) in enumerate(self.train_dataloader):
             X, y = X.to(self.device), y.to(self.device)
 

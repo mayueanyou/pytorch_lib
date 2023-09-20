@@ -1,8 +1,11 @@
 import os,sys,torch,random
 from torchsummary import summary
+import torch.nn.functional as F
 import numpy as np
 from sklearn.metrics import confusion_matrix
 import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
 
 class Net():
     def __init__(self,net,load,model_folder_path,optimizer='Adam',loss=None) -> None:
@@ -91,6 +94,7 @@ class Net():
         self.net.train() if self.train_model else self.net.eval()
     
     def train(self,input_data,label,bp):
+        self.net_setup()
         pred,feature = self.net(input_data)
         loss = self.loss.loss_fn(pred,label)
         if self.train_model and bp:
@@ -114,4 +118,18 @@ class Net():
             test_loss /= num_batches
             correct /= size
             return correct > self.basic_info['best_validate_accuracy'], correct, test_loss
+    
+    def get_confusion_matrix(self,dataloader,classes,name=''):
+        self.net.eval()
+        with torch.no_grad():
+            for X, y in dataloader:
+                X, y = X.to(self.device), y.to(self.device)
+                pred,feature = self.net(X)
+        pred = F.softmax(pred,dim=1)
+        pred = pred.argmax(1)
+        cf_matrix = confusion_matrix(y, pred)
+        df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix, axis=1)[:, None], index = [i for i in classes],columns = [i for i in classes])
+        plt.figure(figsize = (12,7))
+        sn.heatmap(df_cm, annot=True)
+        plt.savefig(f'./image/cf_matrix{name}.png')
     
