@@ -22,11 +22,11 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=10000, profile=None, sci_mode=False)
 
-def prepare_loaders(transform,target_list=None,label_setup=None):
+def prepare_loaders(transform,target_list=None,label_setup=None,batch_size=64):
     training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=transform)
     test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=transform)
     dataset_loader = DatasetLoader(training_data,test_data)
-    training_data,test_data,validate_data = dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup)
+    training_data,test_data,validate_data = dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
     return training_data,test_data,validate_data
 
 def train(net,epoch,transform,target_list=None,label_setup=None):

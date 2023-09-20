@@ -3,24 +3,23 @@ from torch.utils.data import DataLoader
 import torchvision.transforms.functional as F
 
 class DatasetLoader():
-    def __init__(self,train_data,test_data,batch_size = 64) -> None:
-        self.batch_size = batch_size
+    def __init__(self,train_data,test_data) -> None:
         self.train_data = train_data
         if not torch.is_tensor(self.train_data.targets): self.train_data.targets = torch.tensor(self.train_data.targets)
         self.test_data = test_data
         if not torch.is_tensor(self.test_data.targets): self.test_data.targets = torch.tensor(self.test_data.targets)
     
-    def print_info(self,train,test,validate):
-        print(f'batch size: {self.batch_size}')
+    def print_info(self,train,test,validate,batch_size):
+        print(f'batch size: {batch_size}')
         print(f'data in total:  train[{len(train)}] test[{len(test)}] validate[{len(validate)}]')
         print(f'data per batch: train[{len(train)/self.batch_size}] test[{len(test)/self.batch_size}] validate[{len(validate)/self.batch_size}]\n')
     
-    def get_loaders(self,target_list=None,label_setup=None):
+    def get_loaders(self,target_list=None,label_setup=None,batch_size = 64):
         training_data,test_data,validate_data = self.dataset_reset(target_list,label_setup)
         self.print_info(training_data,test_data,validate_data)
-        train_dataloader = DataLoader(training_data, batch_size = self.batch_size)
-        test_dataloader = DataLoader(test_data, batch_size = self.batch_size)
-        validate_dataloader = DataLoader(validate_data, batch_size = self.batch_size)
+        train_dataloader = DataLoader(training_data, batch_size = batch_size)
+        test_dataloader = DataLoader(test_data, batch_size = batch_size)
+        validate_dataloader = DataLoader(validate_data, batch_size = batch_size)
         return train_dataloader,test_dataloader,validate_dataloader
         
     
