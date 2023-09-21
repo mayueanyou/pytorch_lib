@@ -4,6 +4,7 @@ import torchvision.transforms.functional as F
 
 class DatasetLoader():
     def __init__(self,train_data,test_data) -> None:
+        self.validate_rate = 0.2
         self.train_data = train_data
         if not torch.is_tensor(self.train_data.targets): self.train_data.targets = torch.tensor(self.train_data.targets)
         self.test_data = test_data
@@ -41,13 +42,38 @@ class DatasetLoader():
             idx = sum(dataset.targets==i for i in setup[0]).bool()
             dataset_new.targets[idx] = setup[1]
         return dataset_new
+    
+    def dataset_separate_validate(self,dataset):
+        split_number = int(len(dataset)*self.validate_rate)
+        train = copy.deepcopy(dataset)
+        train.data = train.data[split_number:]
+        train.targets = train.targets[split_number:]
+        validate = copy.deepcopy(dataset)
+        validate.data = validate.data[:split_number]
+        validate.targets = validate.targets[:split_number]
+        return train,validate
 
-    def dataset_reset(self,target_list=None,label_setup=None):
+    def dataset_reset_back(self,target_list=None,label_setup=None):
         train_data = self.dataset_select_bylabel(self.train_data,target_list) if target_list is not None else self.train_data
         train_data = self.dataset_change_label(train_data,label_setup) if label_setup is not None else train_data
         validate_num = int(len(train_data)/5)
         training_num = int(len(train_data)-validate_num)
         train_data, validate_data = torch.utils.data.random_split(train_data, [training_num, validate_num])
+        test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
+        test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
+        return train_data,test_data,validate_data
+    
+    def dataset_reset(self,target_list=None,label_setup=None):
+        train_data, validate_data = self.dataset_separate_validate(self.train_data)
+        
+        train_data = self.dataset_select_bylabel(train_data,target_list) if target_list is not None else train_data
+        train_data = self.dataset_change_label(train_data,label_setup) if label_setup is not None else train_data
+        
+        validate_data = self.dataset_select_bylabel(validate_data,target_list) if target_list is not None else validate_data
+        validate_data = self.dataset_change_label(validate_data,label_setup) if label_setup is not None else validate_data
+        #validate_num = int(len(train_data)/5)
+        #training_num = int(len(train_data)-validate_num)
+        #train_data, validate_data = torch.utils.data.random_split(train_data, [training_num, validate_num])
         test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
         test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
         return train_data,test_data,validate_data

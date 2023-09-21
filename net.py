@@ -8,9 +8,9 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 
 class Net():
-    def __init__(self,net,load,model_folder_path,optimizer='Adam',postfix=None,loss=None) -> None:
+    def __init__(self,net,load,model_folder_path,postfix=None,optimizer='Adam',loss=None) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        print(torch.cuda.get_device_name(0)) if torch.cuda.is_available() else print('No GPU')
+        print(torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
         if postfix is not None: self.net.name = self.net.name + '_' + postfix
@@ -120,17 +120,21 @@ class Net():
             correct /= size
             return correct > self.basic_info['best_validate_accuracy'], correct, test_loss
     
-    def get_confusion_matrix(self,dataloader,classes,name=''):
+    def get_confusion_matrix(self,dataloader,classes,path,name=''):
         self.net.eval()
+        y_pred = []
+        y_true = []
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
                 pred,feature = self.net(X)
-        pred = F.softmax(pred,dim=1)
-        pred = pred.argmax(1)
-        cf_matrix = confusion_matrix(y, pred)
+                pred = F.softmax(pred,dim=1)
+                pred = pred.argmax(1)
+                y_pred.extend(pred)
+                y_true.extend(y)
+        cf_matrix = confusion_matrix(y_true, y_pred)
         df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix, axis=1)[:, None], index = [i for i in classes],columns = [i for i in classes])
         plt.figure(figsize = (12,7))
         sn.heatmap(df_cm, annot=True)
-        plt.savefig(f'./image/cf_matrix{name}.png')
+        plt.savefig(f'{path}/cf_matrix{name}.png')
     
