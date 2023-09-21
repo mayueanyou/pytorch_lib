@@ -71,9 +71,7 @@ class DatasetLoader():
         
         validate_data = self.dataset_select_bylabel(validate_data,target_list) if target_list is not None else validate_data
         validate_data = self.dataset_change_label(validate_data,label_setup) if label_setup is not None else validate_data
-        #validate_num = int(len(train_data)/5)
-        #training_num = int(len(train_data)-validate_num)
-        #train_data, validate_data = torch.utils.data.random_split(train_data, [training_num, validate_num])
+        
         test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
         test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
         return train_data,test_data,validate_data
