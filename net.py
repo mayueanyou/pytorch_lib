@@ -8,11 +8,12 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 
 class Net():
-    def __init__(self,net,load,model_folder_path,optimizer='Adam',loss=None) -> None:
+    def __init__(self,net,load,model_folder_path,optimizer='Adam',postfix=None,loss=None) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         print(torch.cuda.get_device_name(0)) if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
+        if postfix is not None: self.net.name = self.net.name + '_' + postfix
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
         print('module name: ',self.net.name)

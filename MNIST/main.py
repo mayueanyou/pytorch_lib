@@ -9,12 +9,10 @@ file_path=os.path.abspath(__file__)
 current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
 upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
 upper_upper_path = os.path.abspath(os.path.dirname(upper_path) + os.path.sep + ".")
-sys.path.append(upper_path)
-from trainer import*
-from net import*
+sys.path.append(upper_upper_path)
+from pytorch_template import*
+
 from module import*
-from datasetloader import*
-from loss import*
 
 random.seed(0)
 torch.manual_seed(0)
