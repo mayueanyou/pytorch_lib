@@ -1,6 +1,7 @@
 import os,sys,copy,torch,random,cv2,torchvision
 from torch.utils.data import DataLoader
-import torchvision.transforms.functional as F
+import torchvision.transforms.functional as TF
+import torch.nn.functional as NNF
 
 class DatasetLoader():
     def __init__(self,train_data,test_data) -> None:
@@ -81,9 +82,28 @@ class RGB_Add_Gray:
         pass
 
     def __call__(self, pic):
-        pic = F.to_tensor(pic)
-        gray_pic = F.rgb_to_grayscale(pic)
+        pic = TF.to_tensor(pic)
+        gray_pic = TF.rgb_to_grayscale(pic)
         return torch.cat((pic,gray_pic))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+class RGB_Extension:
+    def __init__(self) -> None:
+        pass
+
+    def __call__(self, pic):
+        self.pic = TF.to_tensor(pic)
+        new_pic = self.add_color(self.pic,0,0.5,0.5)
+        new_pic = self.add_color(new_pic,0.5,0.5,0)
+        new_pic = self.add_color(new_pic,0.5,0,0.5)
+        return new_pic
+    
+    def add_color(self,new_pic,r,g,b):
+        weights = torch.tensor([[r],[g],[b]],dtype=torch.float).view(3, 1, 1, 1)
+        new_color = torch.sum(NNF.conv2d(self.pic, weights,groups=3),dim=0)[None,:]
+        return torch.cat((new_pic,new_color),dim=0)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"

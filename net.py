@@ -8,12 +8,14 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 
 class Net():
-    def __init__(self,net,load,model_folder_path,postfix=None,optimizer='Adam',loss=None) -> None:
+    def __init__(self,net:torch.nn.Module, load:bool, model_folder_path:str,
+                 postfix:str=None,optimizer:str='Adam',loss:str=None) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         print(torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
-        if postfix is not None: self.net.name = self.net.name + '_' + postfix
+        if postfix is not None: self.net.name = self.net.name + '(' + postfix + ')'
+        #if postfix is not None: self.net.name = self.net.name + '_' + postfix
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
         print('module name: ',self.net.name)
@@ -120,7 +122,7 @@ class Net():
             correct /= size
             return correct > self.basic_info['best_validate_accuracy'], correct, test_loss
     
-    def get_confusion_matrix(self,dataloader,classes,path,name=''):
+    def get_confusion_matrix(self,dataloader:torch.utils.data.DataLoader, classes:{},path:str,name:str=''):
         self.net.eval()
         y_pred = []
         y_true = []

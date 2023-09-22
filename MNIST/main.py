@@ -47,7 +47,7 @@ def main(name):
     #test(net,ToTensor(),target_list=target_list,label_setup=label_setup)
     
     training_data,test_data,validate_data = prepare_loaders(ToTensor(),target_list=target_list,label_setup=label_setup,batch_size=-1)
-    net.get_confusion_matrix(test_data,classes)
+    net.get_confusion_matrix(test_data,classes,current_path+'/image')
     
 
 def test_new():

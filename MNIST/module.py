@@ -2,10 +2,7 @@ import os,torch
 from torch import nn
 import torch.nn.functional as F
 
-file_path = os.path.abspath(__file__)
-current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
-upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
-from net_library import*
+from pytorch_template import*
 
 class FNN_1(nn.Module):
     def __init__(self):
