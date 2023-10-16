@@ -11,7 +11,19 @@ class CELoss():
         return (pred.argmax(1) == label).type(torch.float).sum().item()
     
     def calculate_loss(self,pred,label):
-        return self.loss_fn(pred,label)      
+        return self.loss_fn(pred,label)
+
+class MSELoss():
+    def __init__(self) -> None:
+        self.loss_fn = nn.MSELoss()
+    
+    def calculate_correct(self,pred,label):
+        difference = torch.abs(pred - label)
+        correct = torch.mean(1 - torch.div(difference,label)) * len(difference)
+        return correct
+    
+    def calculate_loss(self,pred,label):
+        return self.loss_fn(pred,label)     
 
 class MSELoss_Binary():
     def __init__(self) -> None:
