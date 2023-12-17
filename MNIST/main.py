@@ -39,15 +39,15 @@ def test(net,transform,target_list=None,label_setup=None):
     
 def main(name):
     classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-    net = Net(net = getattr(sys.modules[__name__], name)(),load = True,model_folder_path=current_path+'/model/',loss=CELoss())
+    net = Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/',loss=CELoss())
     target_list=None
     label_setup=None
 
-    #train(net,10,ToTensor(),target_list=target_list,label_setup=label_setup)
-    #test(net,ToTensor(),target_list=target_list,label_setup=label_setup)
+    train(net,10,ToTensor(),target_list=target_list,label_setup=label_setup)
+    test(net,ToTensor(),target_list=target_list,label_setup=label_setup)
     
-    training_data,test_data,validate_data = prepare_loaders(ToTensor(),target_list=target_list,label_setup=label_setup,batch_size=-1)
-    net.get_confusion_matrix(test_data,classes,current_path+'/image')
+    #training_data,test_data,validate_data = prepare_loaders(ToTensor(),target_list=target_list,label_setup=label_setup,batch_size=-1)
+    #net.get_confusion_matrix(test_data,classes,current_path+'/image')
     
 
 def test_new():

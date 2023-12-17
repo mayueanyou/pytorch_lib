@@ -98,8 +98,8 @@ class Net():
     
     def train(self,input_data,label,bp):
         self.net_setup()
-        pred,feature = self.net(input_data)
-        loss = self.loss.loss_fn(pred,label)
+        pred, feature = self.net(input_data)
+        loss = self.loss.calculate_loss(pred,label)
         if self.train_model and bp:
             self.optimizer.zero_grad()
             loss.backward()
@@ -116,7 +116,7 @@ class Net():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
                 pred,feature = self.net(X)
-                test_loss += self.loss.loss_fn(pred, y).item()
+                test_loss += self.loss.calculate_loss(pred, y).item()
                 correct += self.loss.calculate_correct(pred,y)
             test_loss /= num_batches
             correct /= size
