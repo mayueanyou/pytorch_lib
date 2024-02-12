@@ -8,3 +8,4 @@ scikit-learn
 pandas
 seaborn
 einops
+opencv-python
