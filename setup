@@ -2,4 +2,4 @@
 
 work_dir=$(dirname "$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)")
 
-echo "export PYTHONPATH=\$PYTHONPATH:$work_dir/pytorch_template" >> ~/.bashrc
+echo "export PYTHONPATH=\$PYTHONPATH:$work_dir" >> ~/.bashrc
