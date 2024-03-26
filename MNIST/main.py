@@ -5,12 +5,6 @@ from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 import numpy as np
 
-file_path=os.path.abspath(__file__)
-current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
-upper_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
-upper_upper_path = os.path.abspath(os.path.dirname(upper_path) + os.path.sep + ".")
-sys.path.append(upper_upper_path)
-
 import pytorch_template as pt
 from module import*
 
@@ -20,9 +14,12 @@ torch.cuda.manual_seed(0)
 np.random.seed(0)
 torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=10000, profile=None, sci_mode=False)
 
+dataset_path = "~/datasets"
+current_path =  os.path.abspath(os.path.dirname(__file__) + os.path.sep + ".")
+
 def prepare_loaders(transform,target_list=None,label_setup=None,batch_size=64):
-    training_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=True,download=True,transform=transform)
-    test_data = datasets.MNIST(root=upper_upper_path+"/datasets",train=False,download=True,transform=transform)
+    training_data = datasets.MNIST(root=dataset_path,train=True,download=True,transform=transform)
+    test_data = datasets.MNIST(root=dataset_path,train=False,download=True,transform=transform)
     dataset_loader = pt.DatasetLoader(training_data,test_data)
     training_data,test_data,validate_data = dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
     return training_data,test_data,validate_data
@@ -48,6 +45,10 @@ def main(name):
     
     #training_data,test_data,validate_data = prepare_loaders(ToTensor(),target_list=target_list,label_setup=label_setup,batch_size=-1)
     #net.get_confusion_matrix(test_data,classes,current_path+'/image')
+
+def condor(name):
+    import condor_src
+    condor_src.condor_submit(current_path + '/condor', __file__, '-f main -net FNN_1')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -48,6 +48,7 @@ class Net():
         return self.model_folder_path + '%s.pt'%self.net.name
 
     def print_info(self):
+        print('------------------------','model history','------------------------')
         print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')

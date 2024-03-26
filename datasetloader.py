@@ -4,10 +4,10 @@ import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
 
 class CustomDataset(Dataset):
-    def __init__(self, data, targets):
+    def __init__(self, data, targets, normalize = False):
         self.data = data
         self.targets = targets
-        self.normalize()
+        if normalize: self.normalize()
         self.data_shape = data[0].shape
         self.targets_shape = targets[0].shape
         print(f'data shape: {self.data_shape}')
