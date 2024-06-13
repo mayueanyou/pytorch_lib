@@ -4,13 +4,26 @@ import torch.nn.functional as F
 
 from pytorch_template import*
 
+input_size = (1,28,28)
+
 class FNN_1(nn.Module):
     def __init__(self):
         super().__init__()
         self.name = type(self).__name__
-        self.input_size = (1,28,28)
 
         self.fc1 = nn.Linear(784, 10)
+
+    def forward(self,x):
+        x = x.view(-1, 784)
+        x = self.fc1(x)
+        return x,x
+
+class FNN_test(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.name = type(self).__name__
+
+        self.fc1 = fnn_cell(784,32,10)
 
     def forward(self,x):
         x = x.view(-1, 784)
@@ -21,7 +34,6 @@ class FNN_2(nn.Module):
     def __init__(self):
         super().__init__()
         self.name = type(self).__name__
-        self.input_size = (1,28,28)
 
         self.fc1 = nn.Linear(784, 32)
         self.fc2 = nn.Linear(32, 10)
@@ -57,8 +69,6 @@ class CNN_1(nn.Module):
     def __init__(self):
         super().__init__()
         self.name = type(self).__name__
-        self.input_size = (1,28,28)
-        self.input_dim = self.input_size[0]*self.input_size[1]*self.input_size[2]
 
         self.layers = nn.ModuleList([self.Cell() for i in range(10)])
 
@@ -72,31 +82,14 @@ class ResNet_1(nn.Module):
     def __init__(self):
         super().__init__()
         self.name = type(self).__name__
-        self.input_size = (1,28,28)
 
-        self.conv1 = cnn_cell(self.input_size[0],64,7,2,3,bias=False)
+        self.conv1 = cnn_cell(input_size[0],8,7,2,3,bias=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self.make_layer(64, 64, 2, 1)
-        self.layer2 = self.make_layer(64, 128, 2, 2)
-        self.layer3 = self.make_layer(128, 256, 2, 2)
-        self.layer4 = self.make_layer(256, 512, 2, 2)
+        self.layer1 = residual_cell(8, 16, 2, 1)
+        self.layer2 = residual_cell(16, 32, 2, 2)
+        self.layer3 = residual_cell(32, 32, 2, 2)
         #self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc = nn.Linear(512, 10)
-
-    def make_layer(self,input_channel,output_channel,number,stride):
-        def create_cell(input_channel,output_channel,stride):
-            layers = [cnn_cell(input_channel,output_channel,3,stride,1),
-                      cnn_cell(output_channel,output_channel,3,1,1,relu=False)]
-            return nn.Sequential(*layers)
-        
-        downsample = None
-        if stride != 1 or input_channel != output_channel:
-            downsample = cnn_cell(input_channel,output_channel,1,stride,0,relu=False)
-        layers = []
-        layers.append(Residual(create_cell(input_channel,output_channel,stride),downsample))
-        for i in range(1, number):
-            layers.append(Residual(create_cell(output_channel,output_channel,1)))
-        return nn.Sequential(*layers)
+        self.fc = nn.Linear(128, 10)
 
     def forward(self,x):
         x = self.conv1(x)
@@ -104,7 +97,6 @@ class ResNet_1(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        x = self.layer4(x)
         # because MNIST is already 1x1 here: disable avg pooling
         #x = self.avgpool(x)
         
@@ -113,15 +105,39 @@ class ResNet_1(nn.Module):
         probas = F.softmax(logits, dim=1)
         return logits, probas
 
-class Transformer_1(nn.Module):
-    def __init__(self):
+class Vit_1(nn.Module):
+    def __init__(self,*,image_size=28,patch_size=28,input_channel=1,att_dim=64,depth=8,heads=8,mlp_dim=128,num_cls=10):
         super().__init__()
-        self.name = 'Transformer_1'
+        self.name = type(self).__name__+'.'+f'{patch_size},{att_dim},{mlp_dim},{depth},{heads}'
         self.input_size = (1,28,28)
+        self.image_size = image_size
+        self.patch_size = patch_size
+        self.num_patche = (image_size // patch_size) ** 2
+        self.patch_dim = input_channel * patch_size ** 2
+        self.patch_to_embedding = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=self.patch_size, p2=self.patch_size),
+            nn.Linear(self.patch_dim,att_dim))
+        self.pos_embedding = nn.Parameter(torch.randn(1, self.num_patche + 16, att_dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, att_dim))
+        #self.extra_token = nn.Parameter(torch.randn(1, 15, att_dim))
+        self.transformer = Transformer(att_dim, depth, heads, mlp_dim)
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        #self.mlp_head = fnn_cell(1024,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        x = self.patch_to_embedding(img)
 
-        self.fc1 = nn.Linear(784, 10)
+        cls_tokens = self.cls_token.expand(img.shape[0], -1, -1)
+        extra_tokens = self.extra_token.expand(img.shape[0], -1, -1)
+        x = torch.cat((cls_tokens, x,extra_tokens), dim=1)
+        x += self.pos_embedding
+        #print(x.shape)
+        x = self.transformer(x, mask)
+        #print(x.shape)
+        #input()
 
-    def forward(self,x):
-        x = x.view(-1, 784)
-        x = self.fc1(x)
-        return x,x  
+        x = self.to_cls_token(x[:, 0])
+        #print(x.shape)
+        #input()
+        return self.mlp_head(x),x

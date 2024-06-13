@@ -31,7 +31,7 @@ class Trainer():
             print_loss(batch,loss)
     
     def test(self):
-        def print_result(name,accuracy,loss):
+        def print_result(name,accuracy,loss=0):
             print(f"{name}: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
         
         def wrap_val_eval(model):
@@ -40,7 +40,8 @@ class Trainer():
             if update: model.update_best_model(validate_accuracy, test_accuracy, test_loss)
             print_result('Validate',validate_accuracy,validate_loss)
             print_result('Test',test_accuracy,test_loss)
-            print_result('Best',model.basic_info['best_test_accuracy'],model.basic_info['best_test_loss'])
+            print_result('Best Validate',model.basic_info['best_validate_accuracy'])
+            print_result('Best Test',model.basic_info['best_test_accuracy'],model.basic_info['best_test_loss'])
 
         print('net:')
         wrap_val_eval(self.net)

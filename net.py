@@ -52,7 +52,8 @@ class Net():
         print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
-        print(f'total parameters: {self.basic_info["parameters"]:,}\n')
+        print(f'total parameters: {self.basic_info["parameters"]:,}')
+        print(f'optimizer: {self.basic_info["optimizer"]}\n')
     
     #------------------------update_function------------------------
     
@@ -99,12 +100,14 @@ class Net():
     
     def train(self,input_data,label,bp):
         self.net_setup()
-        pred, feature = self.net(input_data)
+        #pred, feature = self.net(input_data)
+        pred = self.net(input_data)
         loss = self.loss.calculate_loss(pred,label)
         if self.train_model and bp:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+        feature = None
         return pred,feature,loss
     
     def evalue(self,dataloader):
@@ -116,7 +119,8 @@ class Net():
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
-                pred,feature = self.net(X)
+                #pred,feature = self.net(X)
+                pred = self.net(X)
                 test_loss += self.loss.calculate_loss(pred, y).item()
                 correct += self.loss.calculate_correct(pred,y)
             test_loss /= num_batches

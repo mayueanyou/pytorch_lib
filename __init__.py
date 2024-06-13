@@ -4,3 +4,4 @@ from .datasetloader import*
 from .loss import*
 from .net_library import*
 from .transform import*
+from .visualization import*

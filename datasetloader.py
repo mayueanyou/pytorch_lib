@@ -2,6 +2,53 @@ import os,sys,copy,torch,random,cv2,torchvision
 from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
+from torchvision import datasets,transforms
+from torchvision.transforms import ToTensor
+
+class MNIST:
+    def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor(),target_list=None,label_setup=None,batch_size=64) -> None:
+        self.dataset_loader = DatasetLoader(datasets.MNIST(root=dataset_path,train=True,download=True,transform=training_transform),
+                                            datasets.MNIST(root=dataset_path,train=False,download=True,transform=test_transform))
+        self.target_list = target_list
+        self.label_setup = label_setup
+        self.batch_size = batch_size
+        self.classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    
+    def datas(self):
+        return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
+    
+    def loaders(self):
+        return self.dataset_loader.get_loaders(target_list=self.target_list,label_setup=self.label_setup,batch_size=self.batch_size)
+
+class CIFAR10:
+    def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor(),target_list=None,label_setup=None,batch_size=64) -> None:
+        self.dataset_loader = DatasetLoader(datasets.CIFAR10(root=dataset_path,train=True,download=True,transform=training_transform),
+                                            datasets.CIFAR10(root=dataset_path,train=False,download=True,transform=test_transform))
+        self.target_list = target_list
+        self.label_setup = label_setup
+        self.batch_size = batch_size
+        self.classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    
+    def datas(self):
+        return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
+    
+    def loaders(self):
+        return self.dataset_loader.get_loaders(target_list=self.target_list,label_setup=self.label_setup,batch_size=self.batch_size)
+
+class CIFAR100:
+    def __init__(self,dataset_path,training_transform,test_transform,target_list=None,label_setup=None,batch_size=64) -> None:
+        self.dataset_loader = DatasetLoader(datasets.CIFAR100(root=dataset_path,train=True,download=True,transform=training_transform),
+                                            datasets.CIFAR100(root=dataset_path,train=False,download=True,transform=test_transform))
+        self.target_list = target_list
+        self.label_setup = label_setup
+        self.batch_size = batch_size
+        self.classes = None
+    
+    def datas(self):
+        return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
+    
+    def loaders(self):
+        return self.dataset_loader.get_loaders(target_list=self.target_list,label_setup=self.label_setup,batch_size=self.batch_size)
 
 class CustomDataset(Dataset):
     def __init__(self, data, targets, normalize = False):
@@ -35,7 +82,11 @@ class DatasetLoader():
         print(f'batch size: {batch_size}')
         batch_size = abs(batch_size)
         print(f'data in total:  train[{len(train)}] test[{len(test)}] validate[{len(validate)}]')
-        print(f'data per batch: train[{len(train)//batch_size}] test[{len(test)//batch_size}] validate[{len(validate)//batch_size}]\n')
+        print(f'batchs in total: train[{len(train)//batch_size}] test[{len(test)//batch_size}] validate[{len(validate)//batch_size}]\n')
+    
+    def get_datas(self,target_list=None,label_setup=None):
+        training_data,test_data,validate_data = self.dataset_reset(target_list,label_setup)
+        return training_data,test_data,validate_data
     
     def get_loaders(self,target_list=None,label_setup=None,batch_size = 64):
         training_data,test_data,validate_data = self.dataset_reset(target_list,label_setup)
@@ -85,15 +136,23 @@ class DatasetLoader():
         return train_data,test_data,validate_data
     
     def dataset_reset(self,target_list=None,label_setup=None):
+        def cell(target_list,label_setup,data):
+            data = self.dataset_select_bylabel(data,target_list) if target_list is not None else data
+            data = self.dataset_change_label(data,label_setup) if label_setup is not None else data
+            return data
+        
         train_data, validate_data = self.dataset_separate_validate(self.train_data)
+        train_data = cell(target_list,label_setup,train_data)
+        validate_data = cell(target_list,label_setup,validate_data)
+        test_data = cell(target_list,label_setup,self.test_data)
         
-        train_data = self.dataset_select_bylabel(train_data,target_list) if target_list is not None else train_data
-        train_data = self.dataset_change_label(train_data,label_setup) if label_setup is not None else train_data
+        #train_data = self.dataset_select_bylabel(train_data,target_list) if target_list is not None else train_data
+        #train_data = self.dataset_change_label(train_data,label_setup) if label_setup is not None else train_data
         
-        validate_data = self.dataset_select_bylabel(validate_data,target_list) if target_list is not None else validate_data
-        validate_data = self.dataset_change_label(validate_data,label_setup) if label_setup is not None else validate_data
+        #validate_data = self.dataset_select_bylabel(validate_data,target_list) if target_list is not None else validate_data
+        #validate_data = self.dataset_change_label(validate_data,label_setup) if label_setup is not None else validate_data
         
-        test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
-        test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
+        #test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
+        #test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
         return train_data,test_data,validate_data
 
