@@ -1,0 +1,59 @@
+000 (1636735.000.000) 2024-06-14 15:03:15 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1636735.000.000) 2024-06-14 15:03:46 Job executing on host: <10.5.141.169:9618?addrs=10.5.141.169-9618&alias=SURGE-OG-10-5-141-169&noUDP&sock=startd_1207_7ae6>
+...
+006 (1636735.000.000) 2024-06-14 15:03:54 Image size of job updated: 171788
+	168  -  MemoryUsage of job (MB)
+	171788  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:08:54 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121332  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:13:54 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121408  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:23:56 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121420  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:28:56 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121544  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:38:58 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121552  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 15:59:00 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121656  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 16:04:00 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121704  -  ResidentSetSize of job (KB)
+...
+006 (1636735.000.000) 2024-06-14 16:09:01 Image size of job updated: 14564900
+	3049  -  MemoryUsage of job (MB)
+	3121796  -  ResidentSetSize of job (KB)
+...
+005 (1636735.000.000) 2024-06-14 17:29:17 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 02:15:33, Sys 0 00:09:33  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 02:15:33, Sys 0 00:09:33  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :     0.90                  1 "GPU-0f3c6fcc"
+	   GpusMemory (MB)      :  3156                       
+	   Memory (MB)          :  3049           1       128 
+
+	Job terminated of its own accord at 2024-06-14T21:29:17Z with exit-code 0.
+...

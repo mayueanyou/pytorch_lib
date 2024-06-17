@@ -1,0 +1,8 @@
+executable = /home/yma183/python_packages/condor_src/conda_wrapper
+arguments = py3.10 /home/yma183/python_packages/pytorch_lib/examples/cifar10/main.py -f main -net ResNet_original
+error= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/ResNet_original/err
+output= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/ResNet_original/out
+log= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/ResNet_original/log
+Requirements = (TotalGPUs > 0)
++request_gpus = 1
+queue

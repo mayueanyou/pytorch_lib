@@ -1,0 +1,51 @@
+000 (1636729.000.000) 2024-06-14 13:51:17 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1636729.000.000) 2024-06-14 13:51:30 Job executing on host: <10.5.141.169:9618?addrs=10.5.141.169-9618&alias=SURGE-OG-10-5-141-169&noUDP&sock=startd_1207_7ae6>
+...
+006 (1636729.000.000) 2024-06-14 13:51:39 Image size of job updated: 2256624
+	153  -  MemoryUsage of job (MB)
+	156568  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 13:56:40 Image size of job updated: 11184720
+	2261  -  MemoryUsage of job (MB)
+	2314468  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 14:11:41 Image size of job updated: 11184720
+	2261  -  MemoryUsage of job (MB)
+	2314600  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 14:26:42 Image size of job updated: 11186520
+	2263  -  MemoryUsage of job (MB)
+	2316292  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 14:31:43 Image size of job updated: 11186520
+	2263  -  MemoryUsage of job (MB)
+	2316312  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 14:36:43 Image size of job updated: 11187840
+	2264  -  MemoryUsage of job (MB)
+	2317632  -  ResidentSetSize of job (KB)
+...
+006 (1636729.000.000) 2024-06-14 14:41:43 Image size of job updated: 11187840
+	2264  -  MemoryUsage of job (MB)
+	2317636  -  ResidentSetSize of job (KB)
+...
+005 (1636729.000.000) 2024-06-14 14:47:24 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:55:07, Sys 0 00:00:15  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:55:07, Sys 0 00:00:15  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :     0.62                  1 "GPU-0f3c6fcc"
+	   GpusMemory (MB)      :  1750                       
+	   Memory (MB)          :  2264           1       128 
+
+	Job terminated of its own accord at 2024-06-14T18:47:23Z with exit-code 0.
+...

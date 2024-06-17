@@ -1,0 +1,8 @@
+executable = /home/yma183/python_packages/condor_src/conda_wrapper
+arguments = py3.10 /home/yma183/python_packages/pytorch_lib/examples/cifar10/main.py -f main -net Test4
+error= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Test_1024_nob/err
+output= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Test_1024_nob/out
+log= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Test_1024_nob/log
+Requirements = (TotalGPUs > 0)
++request_gpus = 1
+queue

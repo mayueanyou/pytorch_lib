@@ -1,4 +1,4 @@
-import os,sys,torch,random
+import os,sys,torch,random,inspect
 from torchsummary import summary
 import torch.nn.functional as F
 import numpy as np
@@ -11,17 +11,19 @@ class Net():
     def __init__(self,net:torch.nn.Module, load:bool, model_folder_path:str,
                  postfix:str=None,optimizer:str='Adam',loss:str=None) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        print(torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
+        print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
-        if postfix is not None: self.net.name = self.net.name + '(' + postfix + ')'
+        self.net_str = inspect.getsource(type(self.net))
+        self.net_name = type(self.net).__name__
+        if postfix is not None: self.net_name = self.net_name + '(' + postfix + ')'
         #if postfix is not None: self.net.name = self.net.name + '_' + postfix
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
-        print('module name: ',self.net.name)
+        print('module name: ',self.net_name)
         print(f'total parameters: {total_params:,}')
 
-        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,
+        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,'best_module': self.net_str,
                            'best_validate_accuracy':0,'learning rate':0,'parameters':total_params}
         
         self.extra_info = {}
@@ -45,7 +47,7 @@ class Net():
     
     
     def model_path(self):
-        return self.model_folder_path + '%s.pt'%self.net.name
+        return self.model_folder_path + '%s.pt'%self.net_name
 
     def print_info(self):
         print('------------------------','model history','------------------------')
@@ -53,7 +55,8 @@ class Net():
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
         print(f'total parameters: {self.basic_info["parameters"]:,}')
-        print(f'optimizer: {self.basic_info["optimizer"]}\n')
+        print(f'optimizer: {self.basic_info["optimizer"]}')
+        print(f'best_module: \n{self.basic_info["best_module"]}\n')
     
     #------------------------update_function------------------------
     
@@ -65,7 +68,7 @@ class Net():
         elif self.optimizer_select == 'Adam': self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate, weight_decay=0)
     
     def update_name(self,postfix,load):
-        self.net.name = self.net.name + '_' + postfix
+        self.net_name = self.net_name + '_' + postfix
         self.load(load)
     
     def update_best_model(self,validate_accuracy,test_accuracy,test_loss):
@@ -83,6 +86,7 @@ class Net():
         print('------------------------','save model','------------------------')
     
     def load(self,load_model):
+        print(f'current_module:\n{self.basic_info["best_module"]}\n')
         if not os.path.isfile(self.model_path()): return
         data = torch.load(self.model_path() ,map_location=self.device)
         self.basic_info = data['basic_info']

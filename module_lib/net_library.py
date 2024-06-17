@@ -139,7 +139,9 @@ class MultiHeadSelfAttention(nn.Module):
             del mask
 
         attention = dots.softmax(dim=-1)
-        #print('att',attention.shape)
+        print('att',attention.shape)
+        print('v',v.shape)
+        input()
         out = torch.einsum('bhij,bhjd->bhid', attention, v)
         out = rearrange(out, 'b h n d -> b n (h d)')
         out =  self.to_out(out)
@@ -159,6 +161,31 @@ class Transformer(nn.Module):
     def forward(self, x, mask=None):
         x = self.layers(x)
         return x
+
+class ImageToPatches(nn.Module):
+    def __init__(self,image_size,patch_size,dim_out,input_channel=3,position=True,cls_token=True):
+        super().__init__()
+        num_patche = (image_size // patch_size) ** 2
+        patch_dim = input_channel * patch_size ** 2
+        self.position = position
+        self.cls_token = cls_token
+        extra_pos = 0
+        if cls_token: 
+            self.cls_embedding = nn.Parameter(torch.randn(1, 1, dim_out))
+            extra_pos = 1
+        
+        if position: self.pos_embedding = nn.Parameter(torch.randn(1, num_patche + extra_pos, dim_out))
+        
+        self.patch_to_embedding = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
+            nn.Linear(patch_dim,dim_out))
+        
+    def forward(self,x):
+        x = self.patch_to_embedding(x)
+        if self.cls_token: x = torch.cat((self.cls_embedding.expand(x.shape[0], -1, -1), x), dim=1)
+        if self.position: x  += self.pos_embedding
+        return x
+        
 
 class VIT(nn.Module):
     def __init__(self,*,image_size,patch_size,input_channel,att_dim,depth,heads,mlp_dim,num_cls):

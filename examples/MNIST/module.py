@@ -2,7 +2,7 @@ import os,torch
 from torch import nn
 import torch.nn.functional as F
 
-from pytorch_template import*
+from pytorch_lib import*
 
 input_size = (1,28,28)
 
@@ -16,7 +16,7 @@ class FNN_1(nn.Module):
     def forward(self,x):
         x = x.view(-1, 784)
         x = self.fc1(x)
-        return x,x
+        return x#,x
 
 class FNN_test(nn.Module):
     def __init__(self):
@@ -106,7 +106,7 @@ class ResNet_1(nn.Module):
         return logits, probas
 
 class Vit_1(nn.Module):
-    def __init__(self,*,image_size=28,patch_size=28,input_channel=1,att_dim=64,depth=8,heads=8,mlp_dim=128,num_cls=10):
+    def __init__(self,*,image_size=28,patch_size=28,input_channel=1,att_dim=64,depth=8,heads=1,mlp_dim=128,num_cls=10):
         super().__init__()
         self.name = type(self).__name__+'.'+f'{patch_size},{att_dim},{mlp_dim},{depth},{heads}'
         self.input_size = (1,28,28)
@@ -117,7 +117,7 @@ class Vit_1(nn.Module):
         self.patch_to_embedding = nn.Sequential(
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=self.patch_size, p2=self.patch_size),
             nn.Linear(self.patch_dim,att_dim))
-        self.pos_embedding = nn.Parameter(torch.randn(1, self.num_patche + 16, att_dim))
+        self.pos_embedding = nn.Parameter(torch.randn(1, self.num_patche + 1, att_dim))
         self.cls_token = nn.Parameter(torch.randn(1, 1, att_dim))
         #self.extra_token = nn.Parameter(torch.randn(1, 15, att_dim))
         self.transformer = Transformer(att_dim, depth, heads, mlp_dim)
@@ -129,8 +129,9 @@ class Vit_1(nn.Module):
         x = self.patch_to_embedding(img)
 
         cls_tokens = self.cls_token.expand(img.shape[0], -1, -1)
-        extra_tokens = self.extra_token.expand(img.shape[0], -1, -1)
-        x = torch.cat((cls_tokens, x,extra_tokens), dim=1)
+        #extra_tokens = self.extra_token.expand(img.shape[0], -1, -1)
+        #x = torch.cat((cls_tokens, x,extra_tokens), dim=1)
+        x = torch.cat((cls_tokens, x), dim=1)
         x += self.pos_embedding
         #print(x.shape)
         x = self.transformer(x, mask)
