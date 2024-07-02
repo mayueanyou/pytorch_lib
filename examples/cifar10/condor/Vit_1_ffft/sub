@@ -1,0 +1,8 @@
+executable = /home/yma183/python_packages/condor_src/conda_wrapper
+arguments = py3.10 /home/yma183/python_packages/pytorch_lib/examples/cifar10/main.py -f main -net Vit
+error= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_1_ffft/err
+output= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_1_ffft/out
+log= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_1_ffft/log
+Requirements = (TotalGPUs > 0)
++request_gpus = 1
+queue

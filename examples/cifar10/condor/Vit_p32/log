@@ -1,0 +1,142 @@
+000 (1646304.000.000) 2024-06-20 16:18:16 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+007 (1646304.000.000) 2024-06-20 16:18:41 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (1646304.000.000) 2024-06-20 16:18:41 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+000 (1646305.000.000) 2024-06-20 16:20:47 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+000 (1646306.000.000) 2024-06-20 16:20:48 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+007 (1646305.000.000) 2024-06-20 16:21:11 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+007 (1646306.000.000) 2024-06-20 16:21:11 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-33-10: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (1646305.000.000) 2024-06-20 16:21:11 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+012 (1646306.000.000) 2024-06-20 16:21:11 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-33-10: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+000 (1646307.000.000) 2024-06-20 16:22:36 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+007 (1646307.000.000) 2024-06-20 16:22:48 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (1646307.000.000) 2024-06-20 16:22:48 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+009 (1646304.000.000) 2024-06-20 16:23:00 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1646305.000.000) 2024-06-20 16:23:00 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1646306.000.000) 2024-06-20 16:23:00 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1646307.000.000) 2024-06-20 16:25:54 Job was aborted.
+	via condor_rm (by user yma183)
+...
+000 (1646308.000.000) 2024-06-20 16:25:58 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+000 (1646309.000.000) 2024-06-20 16:25:59 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+000 (1646310.000.000) 2024-06-20 16:26:00 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+000 (1646311.000.000) 2024-06-20 16:26:00 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+007 (1646308.000.000) 2024-06-20 16:26:17 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+007 (1646309.000.000) 2024-06-20 16:26:17 Shadow exception!
+	Error from slot1@CRUSH-NODE-10-5-33-10: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (1646308.000.000) 2024-06-20 16:26:17 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-71-12: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+012 (1646309.000.000) 2024-06-20 16:26:17 Job was held.
+	Error from slot1@CRUSH-NODE-10-5-33-10: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_p32/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+001 (1646310.000.000) 2024-06-20 16:26:23 Job executing on host: <10.5.141.168:9618?addrs=10.5.141.168-9618&alias=SURGE-OG-10-5-141-168&noUDP&sock=startd_1197_9ef4>
+...
+001 (1646311.000.000) 2024-06-20 16:26:23 Job executing on host: <10.5.204.125:9618?addrs=10.5.204.125-9618&alias=SURGE-OG-10-5-204-125&noUDP&sock=startd_1202_0ced>
+...
+006 (1646310.000.000) 2024-06-20 16:26:31 Image size of job updated: 2207636
+	1724  -  MemoryUsage of job (MB)
+	1764884  -  ResidentSetSize of job (KB)
+...
+006 (1646311.000.000) 2024-06-20 16:26:32 Image size of job updated: 2127972
+	212  -  MemoryUsage of job (MB)
+	216668  -  ResidentSetSize of job (KB)
+...
+009 (1646308.000.000) 2024-06-20 16:26:45 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1646309.000.000) 2024-06-20 16:26:45 Job was aborted.
+	via condor_rm (by user yma183)
+...
+006 (1646310.000.000) 2024-06-20 16:26:45 Image size of job updated: 10664848
+	2265  -  MemoryUsage of job (MB)
+	2319304  -  ResidentSetSize of job (KB)
+...
+004 (1646310.000.000) 2024-06-20 16:26:45 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:17, Sys 0 00:00:01  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                 1         1 
+	   Disk (KB)            :        1        1     21462 
+	   GPUs                 :                           1 "GPU-a31a1026"
+	   Memory (MB)          :     2265        1       128 
+...
+009 (1646310.000.000) 2024-06-20 16:26:45 Job was aborted.
+	via condor_rm (by user yma183)
+...
+006 (1646311.000.000) 2024-06-20 16:31:33 Image size of job updated: 10665912
+	2266  -  MemoryUsage of job (MB)
+	2320192  -  ResidentSetSize of job (KB)
+...
+005 (1646311.000.000) 2024-06-20 17:12:40 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:46:05, Sys 0 00:00:05  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:46:05, Sys 0 00:00:05  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :     0.10                  1 "GPU-c608da0d"
+	   GpusMemory (MB)      :  1260                       
+	   Memory (MB)          :  2266           1       128 
+
+	Job terminated of its own accord at 2024-06-20T21:12:40Z with exit-code 0.
+...

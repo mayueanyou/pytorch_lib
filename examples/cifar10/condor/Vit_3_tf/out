@@ -1,0 +1,3929 @@
+Tue Jun 18 14:33:16 2024       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Quadro RTX 6000     On   | 00005999:00:00.0 Off |                    0 |
+| N/A   47C    P0   100W / 250W |    208MiB / 23040MiB |     38%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  Quadro RTX 6000     On   | 000065ED:00:00.0 Off |                    0 |
+| N/A   72C    P0   225W / 250W |   1894MiB / 23040MiB |     84%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   2  Quadro RTX 6000     On   | 00008341:00:00.0 Off |                    0 |
+| N/A   53C    P0   215W / 250W |   1718MiB / 23040MiB |     46%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   3  Quadro RTX 6000     On   | 0000D574:00:00.0 Off |                    0 |
+| N/A   25C    P8    12W / 250W |      3MiB / 23040MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A   1846362      C   ...macs/bin.AVX2_256/bin/gmx      205MiB |
+|    1   N/A  N/A   1866814      C   python                           1891MiB |
+|    2   N/A  N/A   1866865      C   python                           1715MiB |
++-----------------------------------------------------------------------------+
+---------------
+The GPU ID is 3,
+---------------
+
+Files already downloaded and verified
+Files already downloaded and verified
+batch size: 128
+data in total:  train[40000] test[10000] validate[10000]
+batchs in total: train[312] test[78] validate[78]
+
+GPU_Name:  Quadro RTX 6000
+module name:  Vit_3
+total parameters: 5,917,838
+current_module:
+class Vit_3(nn.Module):
+    def __init__(self,image_size=32,patch_size=8,input_channel=3,att_dim=512,depth=6,heads=8,mlp_dim=3072,num_cls=10):
+        super().__init__()
+        v = True
+        o = False
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttentionExternalProjection(
+                                           att_dim,heads,projection={'q':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'k':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'v':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'o':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o})})))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+
+------------------------ model history ------------------------
+best validate accuracy: 47.34%
+best test accuracy: 47.05%
+best test loss: 1.453344
+total parameters: 6,968,462
+optimizer: Adam
+best_module: 
+class Vit_3(nn.Module):
+    def __init__(self,image_size=32,patch_size=8,input_channel=3,att_dim=512,depth=6,heads=8,mlp_dim=3072,num_cls=10):
+        super().__init__()
+        v = False
+        o = True
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttentionExternalProjection(
+                                           att_dim,heads,projection={'q':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'k':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'v':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'o':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o})})))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+
+Epoch 1
+-------------------------------
+[    0/40000]loss: 2.359365
+[12800/40000]loss: 2.258293
+[25600/40000]loss: 1.938021
+[38400/40000]loss: 1.947553
+net:
+Validate: 
+ Accuracy: 32.91%, Avg loss: 1.826504 
+
+Test: 
+ Accuracy: 34.11%, Avg loss: 1.819688 
+
+Best Validate: 
+ Accuracy: 47.34%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 47.05%, Avg loss: 1.453344 
+
+Epoch 2
+-------------------------------
+[    0/40000]loss: 1.795616
+[12800/40000]loss: 1.798741
+[25600/40000]loss: 1.819420
+[38400/40000]loss: 1.805893
+net:
+Validate: 
+ Accuracy: 40.54%, Avg loss: 1.644332 
+
+Test: 
+ Accuracy: 40.98%, Avg loss: 1.635290 
+
+Best Validate: 
+ Accuracy: 47.34%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 47.05%, Avg loss: 1.453344 
+
+Epoch 3
+-------------------------------
+[    0/40000]loss: 1.536207
+[12800/40000]loss: 1.617459
+[25600/40000]loss: 1.694445
+[38400/40000]loss: 1.666135
+net:
+Validate: 
+ Accuracy: 45.17%, Avg loss: 1.505042 
+
+Test: 
+ Accuracy: 45.37%, Avg loss: 1.508619 
+
+Best Validate: 
+ Accuracy: 47.34%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 47.05%, Avg loss: 1.453344 
+
+Epoch 4
+-------------------------------
+[    0/40000]loss: 1.424818
+[12800/40000]loss: 1.477462
+[25600/40000]loss: 1.655448
+[38400/40000]loss: 1.528823
+net:
+Validate: 
+ Accuracy: 47.25%, Avg loss: 1.467990 
+
+Test: 
+ Accuracy: 47.71%, Avg loss: 1.460234 
+
+Best Validate: 
+ Accuracy: 47.34%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 47.05%, Avg loss: 1.453344 
+
+Epoch 5
+-------------------------------
+[    0/40000]loss: 1.378360
+[12800/40000]loss: 1.403282
+[25600/40000]loss: 1.502953
+[38400/40000]loss: 1.487048
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 48.49%, Avg loss: 1.427600 
+
+Test: 
+ Accuracy: 48.46%, Avg loss: 1.427018 
+
+Best Validate: 
+ Accuracy: 48.49%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 48.46%, Avg loss: 1.427018 
+
+Epoch 6
+-------------------------------
+[    0/40000]loss: 1.361068
+[12800/40000]loss: 1.348192
+[25600/40000]loss: 1.488396
+[38400/40000]loss: 1.501828
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 49.85%, Avg loss: 1.400075 
+
+Test: 
+ Accuracy: 49.77%, Avg loss: 1.403128 
+
+Best Validate: 
+ Accuracy: 49.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 49.77%, Avg loss: 1.403128 
+
+Epoch 7
+-------------------------------
+[    0/40000]loss: 1.326504
+[12800/40000]loss: 1.324291
+[25600/40000]loss: 1.468623
+[38400/40000]loss: 1.412568
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 51.20%, Avg loss: 1.354840 
+
+Test: 
+ Accuracy: 51.29%, Avg loss: 1.342270 
+
+Best Validate: 
+ Accuracy: 51.20%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 51.29%, Avg loss: 1.342270 
+
+Epoch 8
+-------------------------------
+[    0/40000]loss: 1.183514
+[12800/40000]loss: 1.257771
+[25600/40000]loss: 1.397899
+[38400/40000]loss: 1.299592
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 51.41%, Avg loss: 1.351820 
+
+Test: 
+ Accuracy: 51.47%, Avg loss: 1.353971 
+
+Best Validate: 
+ Accuracy: 51.41%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 51.47%, Avg loss: 1.353971 
+
+Epoch 9
+-------------------------------
+[    0/40000]loss: 1.251863
+[12800/40000]loss: 1.249903
+[25600/40000]loss: 1.324750
+[38400/40000]loss: 1.192093
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 51.51%, Avg loss: 1.371030 
+
+Test: 
+ Accuracy: 51.65%, Avg loss: 1.369482 
+
+Best Validate: 
+ Accuracy: 51.51%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 51.65%, Avg loss: 1.369482 
+
+Epoch 10
+-------------------------------
+[    0/40000]loss: 1.241750
+[12800/40000]loss: 1.223507
+[25600/40000]loss: 1.281265
+[38400/40000]loss: 1.152477
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 53.18%, Avg loss: 1.360443 
+
+Test: 
+ Accuracy: 53.00%, Avg loss: 1.366652 
+
+Best Validate: 
+ Accuracy: 53.18%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 53.00%, Avg loss: 1.366652 
+
+Epoch 11
+-------------------------------
+[    0/40000]loss: 1.198554
+[12800/40000]loss: 1.187096
+[25600/40000]loss: 1.204100
+[38400/40000]loss: 1.126591
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 53.68%, Avg loss: 1.341543 
+
+Test: 
+ Accuracy: 52.98%, Avg loss: 1.356978 
+
+Best Validate: 
+ Accuracy: 53.68%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 52.98%, Avg loss: 1.356978 
+
+Epoch 12
+-------------------------------
+[    0/40000]loss: 1.067076
+[12800/40000]loss: 1.195861
+[25600/40000]loss: 1.347990
+[38400/40000]loss: 1.178099
+net:
+Validate: 
+ Accuracy: 53.46%, Avg loss: 1.356265 
+
+Test: 
+ Accuracy: 53.44%, Avg loss: 1.357533 
+
+Best Validate: 
+ Accuracy: 53.68%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 52.98%, Avg loss: 1.356978 
+
+Epoch 13
+-------------------------------
+[    0/40000]loss: 0.973124
+[12800/40000]loss: 1.143187
+[25600/40000]loss: 1.155019
+[38400/40000]loss: 1.043534
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 54.82%, Avg loss: 1.328910 
+
+Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Best Validate: 
+ Accuracy: 54.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Epoch 14
+-------------------------------
+[    0/40000]loss: 1.003083
+[12800/40000]loss: 1.152224
+[25600/40000]loss: 1.148936
+[38400/40000]loss: 1.000781
+net:
+Validate: 
+ Accuracy: 54.52%, Avg loss: 1.347288 
+
+Test: 
+ Accuracy: 54.12%, Avg loss: 1.369926 
+
+Best Validate: 
+ Accuracy: 54.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Epoch 15
+-------------------------------
+[    0/40000]loss: 0.947001
+[12800/40000]loss: 1.039839
+[25600/40000]loss: 1.052377
+[38400/40000]loss: 0.967538
+net:
+Validate: 
+ Accuracy: 53.31%, Avg loss: 1.412045 
+
+Test: 
+ Accuracy: 53.60%, Avg loss: 1.424533 
+
+Best Validate: 
+ Accuracy: 54.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Epoch 16
+-------------------------------
+[    0/40000]loss: 0.922664
+[12800/40000]loss: 0.910377
+[25600/40000]loss: 1.014908
+[38400/40000]loss: 0.927257
+net:
+Validate: 
+ Accuracy: 53.31%, Avg loss: 1.446558 
+
+Test: 
+ Accuracy: 52.02%, Avg loss: 1.468266 
+
+Best Validate: 
+ Accuracy: 54.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Epoch 17
+-------------------------------
+[    0/40000]loss: 0.938726
+[12800/40000]loss: 0.818733
+[25600/40000]loss: 0.926559
+[38400/40000]loss: 0.970489
+net:
+Validate: 
+ Accuracy: 54.76%, Avg loss: 1.421321 
+
+Test: 
+ Accuracy: 54.05%, Avg loss: 1.445922 
+
+Best Validate: 
+ Accuracy: 54.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.09%, Avg loss: 1.343621 
+
+Epoch 18
+-------------------------------
+[    0/40000]loss: 0.895577
+[12800/40000]loss: 0.857166
+[25600/40000]loss: 0.864666
+[38400/40000]loss: 1.018149
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 55.50%, Avg loss: 1.402260 
+
+Test: 
+ Accuracy: 54.48%, Avg loss: 1.436233 
+
+Best Validate: 
+ Accuracy: 55.50%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 54.48%, Avg loss: 1.436233 
+
+Epoch 19
+-------------------------------
+[    0/40000]loss: 0.798975
+[12800/40000]loss: 0.794312
+[25600/40000]loss: 0.756046
+[38400/40000]loss: 0.936257
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 56.77%, Avg loss: 1.351876 
+
+Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 20
+-------------------------------
+[    0/40000]loss: 0.692420
+[12800/40000]loss: 0.771142
+[25600/40000]loss: 0.928764
+[38400/40000]loss: 0.806302
+net:
+Validate: 
+ Accuracy: 56.05%, Avg loss: 1.407721 
+
+Test: 
+ Accuracy: 54.77%, Avg loss: 1.426505 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 21
+-------------------------------
+[    0/40000]loss: 0.738205
+[12800/40000]loss: 0.775772
+[25600/40000]loss: 0.803231
+[38400/40000]loss: 0.829764
+net:
+Validate: 
+ Accuracy: 55.68%, Avg loss: 1.446015 
+
+Test: 
+ Accuracy: 54.63%, Avg loss: 1.488394 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 22
+-------------------------------
+[    0/40000]loss: 0.641353
+[12800/40000]loss: 0.831002
+[25600/40000]loss: 0.654641
+[38400/40000]loss: 1.032213
+net:
+Validate: 
+ Accuracy: 55.77%, Avg loss: 1.461252 
+
+Test: 
+ Accuracy: 54.61%, Avg loss: 1.483018 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 23
+-------------------------------
+[    0/40000]loss: 0.678937
+[12800/40000]loss: 0.692090
+[25600/40000]loss: 0.835908
+[38400/40000]loss: 0.753831
+net:
+Validate: 
+ Accuracy: 54.69%, Avg loss: 1.569031 
+
+Test: 
+ Accuracy: 53.79%, Avg loss: 1.564952 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 24
+-------------------------------
+[    0/40000]loss: 0.676058
+[12800/40000]loss: 0.689908
+[25600/40000]loss: 0.702588
+[38400/40000]loss: 0.577387
+net:
+Validate: 
+ Accuracy: 55.10%, Avg loss: 1.615973 
+
+Test: 
+ Accuracy: 54.30%, Avg loss: 1.612784 
+
+Best Validate: 
+ Accuracy: 56.77%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.49%, Avg loss: 1.364227 
+
+Epoch 25
+-------------------------------
+[    0/40000]loss: 0.693422
+[12800/40000]loss: 0.501021
+[25600/40000]loss: 0.629254
+[38400/40000]loss: 0.704785
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 56.82%, Avg loss: 1.617340 
+
+Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 26
+-------------------------------
+[    0/40000]loss: 0.455439
+[12800/40000]loss: 0.599261
+[25600/40000]loss: 0.522412
+[38400/40000]loss: 0.574661
+net:
+Validate: 
+ Accuracy: 55.99%, Avg loss: 1.721127 
+
+Test: 
+ Accuracy: 56.40%, Avg loss: 1.701901 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 27
+-------------------------------
+[    0/40000]loss: 0.500265
+[12800/40000]loss: 0.583007
+[25600/40000]loss: 0.502185
+[38400/40000]loss: 0.413335
+net:
+Validate: 
+ Accuracy: 53.45%, Avg loss: 1.919472 
+
+Test: 
+ Accuracy: 53.44%, Avg loss: 1.891674 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 28
+-------------------------------
+[    0/40000]loss: 0.499687
+[12800/40000]loss: 0.421959
+[25600/40000]loss: 0.400741
+[38400/40000]loss: 0.778358
+net:
+Validate: 
+ Accuracy: 53.59%, Avg loss: 2.018432 
+
+Test: 
+ Accuracy: 53.57%, Avg loss: 1.967615 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 29
+-------------------------------
+[    0/40000]loss: 0.699301
+[12800/40000]loss: 0.436571
+[25600/40000]loss: 0.600742
+[38400/40000]loss: 0.500941
+net:
+Validate: 
+ Accuracy: 55.59%, Avg loss: 1.900581 
+
+Test: 
+ Accuracy: 55.22%, Avg loss: 1.886308 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 30
+-------------------------------
+[    0/40000]loss: 0.258813
+[12800/40000]loss: 0.522811
+[25600/40000]loss: 0.455317
+[38400/40000]loss: 0.512278
+net:
+Validate: 
+ Accuracy: 53.56%, Avg loss: 2.002527 
+
+Test: 
+ Accuracy: 53.91%, Avg loss: 1.983048 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 31
+-------------------------------
+[    0/40000]loss: 0.469842
+[12800/40000]loss: 0.406506
+[25600/40000]loss: 0.474919
+[38400/40000]loss: 0.408976
+net:
+Validate: 
+ Accuracy: 51.38%, Avg loss: 2.253695 
+
+Test: 
+ Accuracy: 51.68%, Avg loss: 2.222412 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 32
+-------------------------------
+[    0/40000]loss: 0.378506
+[12800/40000]loss: 0.396972
+[25600/40000]loss: 0.453528
+[38400/40000]loss: 0.420039
+net:
+Validate: 
+ Accuracy: 52.99%, Avg loss: 2.267370 
+
+Test: 
+ Accuracy: 53.35%, Avg loss: 2.235114 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 33
+-------------------------------
+[    0/40000]loss: 0.461350
+[12800/40000]loss: 0.327453
+[25600/40000]loss: 0.363893
+[38400/40000]loss: 0.419812
+net:
+Validate: 
+ Accuracy: 55.19%, Avg loss: 2.072845 
+
+Test: 
+ Accuracy: 55.25%, Avg loss: 2.046556 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 34
+-------------------------------
+[    0/40000]loss: 0.287130
+[12800/40000]loss: 0.364023
+[25600/40000]loss: 0.318143
+[38400/40000]loss: 0.232703
+net:
+Validate: 
+ Accuracy: 56.52%, Avg loss: 2.127393 
+
+Test: 
+ Accuracy: 55.61%, Avg loss: 2.147442 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 35
+-------------------------------
+[    0/40000]loss: 0.186348
+[12800/40000]loss: 0.230388
+[25600/40000]loss: 0.277029
+[38400/40000]loss: 0.431691
+net:
+Validate: 
+ Accuracy: 55.94%, Avg loss: 2.167769 
+
+Test: 
+ Accuracy: 55.17%, Avg loss: 2.178006 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 36
+-------------------------------
+[    0/40000]loss: 0.312043
+[12800/40000]loss: 0.213973
+[25600/40000]loss: 0.300440
+[38400/40000]loss: 0.300044
+net:
+Validate: 
+ Accuracy: 55.60%, Avg loss: 2.223148 
+
+Test: 
+ Accuracy: 56.01%, Avg loss: 2.268141 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 37
+-------------------------------
+[    0/40000]loss: 0.232866
+[12800/40000]loss: 0.275959
+[25600/40000]loss: 0.340671
+[38400/40000]loss: 0.379164
+net:
+Validate: 
+ Accuracy: 55.51%, Avg loss: 2.400476 
+
+Test: 
+ Accuracy: 54.75%, Avg loss: 2.455445 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 38
+-------------------------------
+[    0/40000]loss: 0.415569
+[12800/40000]loss: 0.232029
+[25600/40000]loss: 0.275943
+[38400/40000]loss: 0.258149
+net:
+Validate: 
+ Accuracy: 56.19%, Avg loss: 2.217985 
+
+Test: 
+ Accuracy: 56.04%, Avg loss: 2.237675 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 39
+-------------------------------
+[    0/40000]loss: 0.346493
+[12800/40000]loss: 0.190665
+[25600/40000]loss: 0.229816
+[38400/40000]loss: 0.334233
+net:
+Validate: 
+ Accuracy: 54.03%, Avg loss: 2.582265 
+
+Test: 
+ Accuracy: 53.60%, Avg loss: 2.595527 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 40
+-------------------------------
+[    0/40000]loss: 0.305362
+[12800/40000]loss: 0.116291
+[25600/40000]loss: 0.224352
+[38400/40000]loss: 0.462407
+net:
+Validate: 
+ Accuracy: 54.54%, Avg loss: 2.579761 
+
+Test: 
+ Accuracy: 53.95%, Avg loss: 2.595542 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 41
+-------------------------------
+[    0/40000]loss: 0.290806
+[12800/40000]loss: 0.304818
+[25600/40000]loss: 0.247547
+[38400/40000]loss: 0.247274
+net:
+Validate: 
+ Accuracy: 55.84%, Avg loss: 2.393160 
+
+Test: 
+ Accuracy: 55.45%, Avg loss: 2.386648 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 42
+-------------------------------
+[    0/40000]loss: 0.128360
+[12800/40000]loss: 0.237153
+[25600/40000]loss: 0.277329
+[38400/40000]loss: 0.377953
+net:
+Validate: 
+ Accuracy: 56.29%, Avg loss: 2.458588 
+
+Test: 
+ Accuracy: 54.90%, Avg loss: 2.530237 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 43
+-------------------------------
+[    0/40000]loss: 0.189819
+[12800/40000]loss: 0.172922
+[25600/40000]loss: 0.283198
+[38400/40000]loss: 0.291102
+net:
+Validate: 
+ Accuracy: 55.21%, Avg loss: 2.630411 
+
+Test: 
+ Accuracy: 55.48%, Avg loss: 2.652019 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 44
+-------------------------------
+[    0/40000]loss: 0.277717
+[12800/40000]loss: 0.280110
+[25600/40000]loss: 0.186357
+[38400/40000]loss: 0.226312
+net:
+Validate: 
+ Accuracy: 56.44%, Avg loss: 2.606790 
+
+Test: 
+ Accuracy: 55.82%, Avg loss: 2.646243 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 45
+-------------------------------
+[    0/40000]loss: 0.182239
+[12800/40000]loss: 0.116375
+[25600/40000]loss: 0.234472
+[38400/40000]loss: 0.211653
+net:
+Validate: 
+ Accuracy: 56.00%, Avg loss: 2.658675 
+
+Test: 
+ Accuracy: 55.76%, Avg loss: 2.659550 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 46
+-------------------------------
+[    0/40000]loss: 0.227786
+[12800/40000]loss: 0.203485
+[25600/40000]loss: 0.213916
+[38400/40000]loss: 0.164722
+net:
+Validate: 
+ Accuracy: 56.17%, Avg loss: 2.604319 
+
+Test: 
+ Accuracy: 56.39%, Avg loss: 2.591437 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 47
+-------------------------------
+[    0/40000]loss: 0.208591
+[12800/40000]loss: 0.118708
+[25600/40000]loss: 0.135696
+[38400/40000]loss: 0.292396
+net:
+Validate: 
+ Accuracy: 55.16%, Avg loss: 2.726292 
+
+Test: 
+ Accuracy: 54.92%, Avg loss: 2.720640 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 48
+-------------------------------
+[    0/40000]loss: 0.191523
+[12800/40000]loss: 0.181800
+[25600/40000]loss: 0.222662
+[38400/40000]loss: 0.220891
+net:
+Validate: 
+ Accuracy: 55.87%, Avg loss: 2.835001 
+
+Test: 
+ Accuracy: 56.64%, Avg loss: 2.780638 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 49
+-------------------------------
+[    0/40000]loss: 0.130533
+[12800/40000]loss: 0.232952
+[25600/40000]loss: 0.149396
+[38400/40000]loss: 0.192250
+net:
+Validate: 
+ Accuracy: 55.92%, Avg loss: 2.784747 
+
+Test: 
+ Accuracy: 55.76%, Avg loss: 2.825611 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 50
+-------------------------------
+[    0/40000]loss: 0.200257
+[12800/40000]loss: 0.169331
+[25600/40000]loss: 0.179949
+[38400/40000]loss: 0.180752
+net:
+Validate: 
+ Accuracy: 56.14%, Avg loss: 2.643033 
+
+Test: 
+ Accuracy: 56.26%, Avg loss: 2.706725 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 51
+-------------------------------
+[    0/40000]loss: 0.250016
+[12800/40000]loss: 0.169388
+[25600/40000]loss: 0.121689
+[38400/40000]loss: 0.117375
+net:
+Validate: 
+ Accuracy: 55.02%, Avg loss: 2.854647 
+
+Test: 
+ Accuracy: 55.21%, Avg loss: 2.893212 
+
+Best Validate: 
+ Accuracy: 56.82%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 55.51%, Avg loss: 1.645723 
+
+Epoch 52
+-------------------------------
+[    0/40000]loss: 0.371710
+[12800/40000]loss: 0.186970
+[25600/40000]loss: 0.189986
+[38400/40000]loss: 0.208143
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 56.86%, Avg loss: 2.732650 
+
+Test: 
+ Accuracy: 56.18%, Avg loss: 2.781527 
+
+Best Validate: 
+ Accuracy: 56.86%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.18%, Avg loss: 2.781527 
+
+Epoch 53
+-------------------------------
+[    0/40000]loss: 0.075457
+[12800/40000]loss: 0.147105
+[25600/40000]loss: 0.171521
+[38400/40000]loss: 0.183732
+net:
+Validate: 
+ Accuracy: 56.51%, Avg loss: 2.907350 
+
+Test: 
+ Accuracy: 56.15%, Avg loss: 2.881213 
+
+Best Validate: 
+ Accuracy: 56.86%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.18%, Avg loss: 2.781527 
+
+Epoch 54
+-------------------------------
+[    0/40000]loss: 0.075310
+[12800/40000]loss: 0.103335
+[25600/40000]loss: 0.244156
+[38400/40000]loss: 0.209162
+net:
+Validate: 
+ Accuracy: 56.68%, Avg loss: 2.959307 
+
+Test: 
+ Accuracy: 55.96%, Avg loss: 2.909250 
+
+Best Validate: 
+ Accuracy: 56.86%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.18%, Avg loss: 2.781527 
+
+Epoch 55
+-------------------------------
+[    0/40000]loss: 0.070089
+[12800/40000]loss: 0.128282
+[25600/40000]loss: 0.114128
+[38400/40000]loss: 0.116143
+net:
+Validate: 
+ Accuracy: 56.31%, Avg loss: 2.773877 
+
+Test: 
+ Accuracy: 55.43%, Avg loss: 2.792113 
+
+Best Validate: 
+ Accuracy: 56.86%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.18%, Avg loss: 2.781527 
+
+Epoch 56
+-------------------------------
+[    0/40000]loss: 0.099348
+[12800/40000]loss: 0.199626
+[25600/40000]loss: 0.215599
+[38400/40000]loss: 0.227749
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.31%, Avg loss: 2.878582 
+
+Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 57
+-------------------------------
+[    0/40000]loss: 0.152940
+[12800/40000]loss: 0.106874
+[25600/40000]loss: 0.057346
+[38400/40000]loss: 0.082328
+net:
+Validate: 
+ Accuracy: 56.36%, Avg loss: 2.833450 
+
+Test: 
+ Accuracy: 56.20%, Avg loss: 2.812420 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 58
+-------------------------------
+[    0/40000]loss: 0.194901
+[12800/40000]loss: 0.049279
+[25600/40000]loss: 0.158638
+[38400/40000]loss: 0.147096
+net:
+Validate: 
+ Accuracy: 55.97%, Avg loss: 2.883621 
+
+Test: 
+ Accuracy: 55.98%, Avg loss: 2.836775 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 59
+-------------------------------
+[    0/40000]loss: 0.145265
+[12800/40000]loss: 0.179933
+[25600/40000]loss: 0.248440
+[38400/40000]loss: 0.151863
+net:
+Validate: 
+ Accuracy: 56.79%, Avg loss: 2.846860 
+
+Test: 
+ Accuracy: 56.35%, Avg loss: 2.912648 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 60
+-------------------------------
+[    0/40000]loss: 0.076128
+[12800/40000]loss: 0.216781
+[25600/40000]loss: 0.184022
+[38400/40000]loss: 0.087925
+net:
+Validate: 
+ Accuracy: 56.58%, Avg loss: 2.984267 
+
+Test: 
+ Accuracy: 56.79%, Avg loss: 2.977067 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 61
+-------------------------------
+[    0/40000]loss: 0.089598
+[12800/40000]loss: 0.078541
+[25600/40000]loss: 0.062172
+[38400/40000]loss: 0.159703
+net:
+Validate: 
+ Accuracy: 56.29%, Avg loss: 2.900081 
+
+Test: 
+ Accuracy: 56.68%, Avg loss: 2.892458 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 62
+-------------------------------
+[    0/40000]loss: 0.100138
+[12800/40000]loss: 0.124706
+[25600/40000]loss: 0.072085
+[38400/40000]loss: 0.133816
+net:
+Validate: 
+ Accuracy: 56.62%, Avg loss: 2.997455 
+
+Test: 
+ Accuracy: 56.85%, Avg loss: 3.007539 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 63
+-------------------------------
+[    0/40000]loss: 0.141631
+[12800/40000]loss: 0.039535
+[25600/40000]loss: 0.088449
+[38400/40000]loss: 0.190258
+net:
+Validate: 
+ Accuracy: 56.82%, Avg loss: 2.816781 
+
+Test: 
+ Accuracy: 56.80%, Avg loss: 2.799672 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 64
+-------------------------------
+[    0/40000]loss: 0.128658
+[12800/40000]loss: 0.167253
+[25600/40000]loss: 0.138736
+[38400/40000]loss: 0.102316
+net:
+Validate: 
+ Accuracy: 56.90%, Avg loss: 3.021294 
+
+Test: 
+ Accuracy: 57.05%, Avg loss: 2.958446 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 65
+-------------------------------
+[    0/40000]loss: 0.077178
+[12800/40000]loss: 0.248945
+[25600/40000]loss: 0.117352
+[38400/40000]loss: 0.080454
+net:
+Validate: 
+ Accuracy: 57.20%, Avg loss: 3.132272 
+
+Test: 
+ Accuracy: 56.49%, Avg loss: 3.122180 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 66
+-------------------------------
+[    0/40000]loss: 0.090096
+[12800/40000]loss: 0.208971
+[25600/40000]loss: 0.188240
+[38400/40000]loss: 0.435021
+net:
+Validate: 
+ Accuracy: 57.02%, Avg loss: 2.964040 
+
+Test: 
+ Accuracy: 56.13%, Avg loss: 3.047532 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 67
+-------------------------------
+[    0/40000]loss: 0.139153
+[12800/40000]loss: 0.071787
+[25600/40000]loss: 0.178196
+[38400/40000]loss: 0.132467
+net:
+Validate: 
+ Accuracy: 56.49%, Avg loss: 3.011681 
+
+Test: 
+ Accuracy: 56.66%, Avg loss: 3.000367 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 68
+-------------------------------
+[    0/40000]loss: 0.061704
+[12800/40000]loss: 0.111080
+[25600/40000]loss: 0.252474
+[38400/40000]loss: 0.053909
+net:
+Validate: 
+ Accuracy: 56.11%, Avg loss: 3.165773 
+
+Test: 
+ Accuracy: 55.72%, Avg loss: 3.171464 
+
+Best Validate: 
+ Accuracy: 57.31%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 2.931587 
+
+Epoch 69
+-------------------------------
+[    0/40000]loss: 0.101801
+[12800/40000]loss: 0.057492
+[25600/40000]loss: 0.105252
+[38400/40000]loss: 0.163305
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.65%, Avg loss: 3.052936 
+
+Test: 
+ Accuracy: 56.55%, Avg loss: 3.072890 
+
+Best Validate: 
+ Accuracy: 57.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 3.072890 
+
+Epoch 70
+-------------------------------
+[    0/40000]loss: 0.108968
+[12800/40000]loss: 0.084333
+[25600/40000]loss: 0.149334
+[38400/40000]loss: 0.116971
+net:
+Validate: 
+ Accuracy: 57.45%, Avg loss: 3.112084 
+
+Test: 
+ Accuracy: 56.96%, Avg loss: 3.110580 
+
+Best Validate: 
+ Accuracy: 57.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 3.072890 
+
+Epoch 71
+-------------------------------
+[    0/40000]loss: 0.105432
+[12800/40000]loss: 0.086824
+[25600/40000]loss: 0.123692
+[38400/40000]loss: 0.098608
+net:
+Validate: 
+ Accuracy: 56.51%, Avg loss: 3.095436 
+
+Test: 
+ Accuracy: 56.44%, Avg loss: 3.101121 
+
+Best Validate: 
+ Accuracy: 57.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.55%, Avg loss: 3.072890 
+
+Epoch 72
+-------------------------------
+[    0/40000]loss: 0.045935
+[12800/40000]loss: 0.132343
+[25600/40000]loss: 0.122801
+[38400/40000]loss: 0.189224
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.70%, Avg loss: 2.980983 
+
+Test: 
+ Accuracy: 56.86%, Avg loss: 3.057973 
+
+Best Validate: 
+ Accuracy: 57.70%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.86%, Avg loss: 3.057973 
+
+Epoch 73
+-------------------------------
+[    0/40000]loss: 0.093287
+[12800/40000]loss: 0.108722
+[25600/40000]loss: 0.099495
+[38400/40000]loss: 0.162784
+net:
+Validate: 
+ Accuracy: 57.14%, Avg loss: 3.022295 
+
+Test: 
+ Accuracy: 57.15%, Avg loss: 3.052543 
+
+Best Validate: 
+ Accuracy: 57.70%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.86%, Avg loss: 3.057973 
+
+Epoch 74
+-------------------------------
+[    0/40000]loss: 0.062766
+[12800/40000]loss: 0.021006
+[25600/40000]loss: 0.048191
+[38400/40000]loss: 0.160735
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.79%, Avg loss: 3.251066 
+
+Test: 
+ Accuracy: 56.72%, Avg loss: 3.248386 
+
+Best Validate: 
+ Accuracy: 57.79%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.72%, Avg loss: 3.248386 
+
+Epoch 75
+-------------------------------
+[    0/40000]loss: 0.221472
+[12800/40000]loss: 0.096605
+[25600/40000]loss: 0.053813
+[38400/40000]loss: 0.031860
+net:
+Validate: 
+ Accuracy: 57.34%, Avg loss: 3.254582 
+
+Test: 
+ Accuracy: 56.32%, Avg loss: 3.252933 
+
+Best Validate: 
+ Accuracy: 57.79%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.72%, Avg loss: 3.248386 
+
+Epoch 76
+-------------------------------
+[    0/40000]loss: 0.036832
+[12800/40000]loss: 0.095894
+[25600/40000]loss: 0.025623
+[38400/40000]loss: 0.076862
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.85%, Avg loss: 3.121396 
+
+Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 77
+-------------------------------
+[    0/40000]loss: 0.083580
+[12800/40000]loss: 0.098081
+[25600/40000]loss: 0.148076
+[38400/40000]loss: 0.105377
+net:
+Validate: 
+ Accuracy: 57.11%, Avg loss: 3.166815 
+
+Test: 
+ Accuracy: 57.15%, Avg loss: 3.157539 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 78
+-------------------------------
+[    0/40000]loss: 0.052992
+[12800/40000]loss: 0.118503
+[25600/40000]loss: 0.032561
+[38400/40000]loss: 0.039552
+net:
+Validate: 
+ Accuracy: 57.38%, Avg loss: 3.395146 
+
+Test: 
+ Accuracy: 57.89%, Avg loss: 3.331033 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 79
+-------------------------------
+[    0/40000]loss: 0.226479
+[12800/40000]loss: 0.123489
+[25600/40000]loss: 0.122429
+[38400/40000]loss: 0.088449
+net:
+Validate: 
+ Accuracy: 57.04%, Avg loss: 3.329789 
+
+Test: 
+ Accuracy: 56.59%, Avg loss: 3.382824 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 80
+-------------------------------
+[    0/40000]loss: 0.079111
+[12800/40000]loss: 0.097114
+[25600/40000]loss: 0.113799
+[38400/40000]loss: 0.178327
+net:
+Validate: 
+ Accuracy: 56.97%, Avg loss: 3.401055 
+
+Test: 
+ Accuracy: 56.46%, Avg loss: 3.433572 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 81
+-------------------------------
+[    0/40000]loss: 0.118791
+[12800/40000]loss: 0.023512
+[25600/40000]loss: 0.005046
+[38400/40000]loss: 0.093843
+net:
+Validate: 
+ Accuracy: 57.42%, Avg loss: 3.122602 
+
+Test: 
+ Accuracy: 56.44%, Avg loss: 3.140871 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 82
+-------------------------------
+[    0/40000]loss: 0.122222
+[12800/40000]loss: 0.076453
+[25600/40000]loss: 0.102880
+[38400/40000]loss: 0.067698
+net:
+Validate: 
+ Accuracy: 57.43%, Avg loss: 3.426243 
+
+Test: 
+ Accuracy: 56.95%, Avg loss: 3.421935 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 83
+-------------------------------
+[    0/40000]loss: 0.094267
+[12800/40000]loss: 0.125552
+[25600/40000]loss: 0.036411
+[38400/40000]loss: 0.180925
+net:
+Validate: 
+ Accuracy: 56.70%, Avg loss: 3.438057 
+
+Test: 
+ Accuracy: 56.37%, Avg loss: 3.424041 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 84
+-------------------------------
+[    0/40000]loss: 0.163958
+[12800/40000]loss: 0.270330
+[25600/40000]loss: 0.061693
+[38400/40000]loss: 0.052921
+net:
+Validate: 
+ Accuracy: 57.33%, Avg loss: 3.235327 
+
+Test: 
+ Accuracy: 57.56%, Avg loss: 3.203377 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 85
+-------------------------------
+[    0/40000]loss: 0.170118
+[12800/40000]loss: 0.065139
+[25600/40000]loss: 0.196547
+[38400/40000]loss: 0.104301
+net:
+Validate: 
+ Accuracy: 57.08%, Avg loss: 3.366901 
+
+Test: 
+ Accuracy: 56.87%, Avg loss: 3.389388 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 86
+-------------------------------
+[    0/40000]loss: 0.131848
+[12800/40000]loss: 0.045850
+[25600/40000]loss: 0.075358
+[38400/40000]loss: 0.054047
+net:
+Validate: 
+ Accuracy: 57.54%, Avg loss: 3.396076 
+
+Test: 
+ Accuracy: 57.58%, Avg loss: 3.365284 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 87
+-------------------------------
+[    0/40000]loss: 0.099308
+[12800/40000]loss: 0.029805
+[25600/40000]loss: 0.133657
+[38400/40000]loss: 0.064767
+net:
+Validate: 
+ Accuracy: 56.40%, Avg loss: 3.397822 
+
+Test: 
+ Accuracy: 56.26%, Avg loss: 3.370436 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 88
+-------------------------------
+[    0/40000]loss: 0.030851
+[12800/40000]loss: 0.036515
+[25600/40000]loss: 0.151239
+[38400/40000]loss: 0.119368
+net:
+Validate: 
+ Accuracy: 56.91%, Avg loss: 3.402285 
+
+Test: 
+ Accuracy: 56.51%, Avg loss: 3.459772 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 89
+-------------------------------
+[    0/40000]loss: 0.044188
+[12800/40000]loss: 0.116912
+[25600/40000]loss: 0.052090
+[38400/40000]loss: 0.104623
+net:
+Validate: 
+ Accuracy: 56.97%, Avg loss: 3.269169 
+
+Test: 
+ Accuracy: 56.79%, Avg loss: 3.305563 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 90
+-------------------------------
+[    0/40000]loss: 0.100424
+[12800/40000]loss: 0.121086
+[25600/40000]loss: 0.218814
+[38400/40000]loss: 0.071801
+net:
+Validate: 
+ Accuracy: 57.05%, Avg loss: 3.254536 
+
+Test: 
+ Accuracy: 57.51%, Avg loss: 3.221656 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 91
+-------------------------------
+[    0/40000]loss: 0.143400
+[12800/40000]loss: 0.031300
+[25600/40000]loss: 0.076957
+[38400/40000]loss: 0.084260
+net:
+Validate: 
+ Accuracy: 56.87%, Avg loss: 3.495138 
+
+Test: 
+ Accuracy: 56.85%, Avg loss: 3.441545 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 92
+-------------------------------
+[    0/40000]loss: 0.095207
+[12800/40000]loss: 0.070642
+[25600/40000]loss: 0.008223
+[38400/40000]loss: 0.124464
+net:
+Validate: 
+ Accuracy: 57.61%, Avg loss: 3.372404 
+
+Test: 
+ Accuracy: 56.99%, Avg loss: 3.364966 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 93
+-------------------------------
+[    0/40000]loss: 0.070805
+[12800/40000]loss: 0.049706
+[25600/40000]loss: 0.154002
+[38400/40000]loss: 0.062708
+net:
+Validate: 
+ Accuracy: 57.66%, Avg loss: 3.402039 
+
+Test: 
+ Accuracy: 56.64%, Avg loss: 3.482680 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 94
+-------------------------------
+[    0/40000]loss: 0.062333
+[12800/40000]loss: 0.029294
+[25600/40000]loss: 0.049977
+[38400/40000]loss: 0.083654
+net:
+Validate: 
+ Accuracy: 57.49%, Avg loss: 3.353378 
+
+Test: 
+ Accuracy: 56.28%, Avg loss: 3.429006 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 95
+-------------------------------
+[    0/40000]loss: 0.036884
+[12800/40000]loss: 0.045836
+[25600/40000]loss: 0.096659
+[38400/40000]loss: 0.109609
+net:
+Validate: 
+ Accuracy: 57.38%, Avg loss: 3.521608 
+
+Test: 
+ Accuracy: 56.36%, Avg loss: 3.570009 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 96
+-------------------------------
+[    0/40000]loss: 0.088646
+[12800/40000]loss: 0.020018
+[25600/40000]loss: 0.213154
+[38400/40000]loss: 0.057626
+net:
+Validate: 
+ Accuracy: 56.75%, Avg loss: 3.489735 
+
+Test: 
+ Accuracy: 57.05%, Avg loss: 3.478296 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 97
+-------------------------------
+[    0/40000]loss: 0.107375
+[12800/40000]loss: 0.052475
+[25600/40000]loss: 0.029819
+[38400/40000]loss: 0.116863
+net:
+Validate: 
+ Accuracy: 56.83%, Avg loss: 3.368166 
+
+Test: 
+ Accuracy: 57.32%, Avg loss: 3.352107 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 98
+-------------------------------
+[    0/40000]loss: 0.131941
+[12800/40000]loss: 0.130713
+[25600/40000]loss: 0.099026
+[38400/40000]loss: 0.089386
+net:
+Validate: 
+ Accuracy: 56.94%, Avg loss: 3.432236 
+
+Test: 
+ Accuracy: 56.64%, Avg loss: 3.449533 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 99
+-------------------------------
+[    0/40000]loss: 0.116624
+[12800/40000]loss: 0.003725
+[25600/40000]loss: 0.034059
+[38400/40000]loss: 0.117292
+net:
+Validate: 
+ Accuracy: 57.47%, Avg loss: 3.605976 
+
+Test: 
+ Accuracy: 57.01%, Avg loss: 3.567534 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 100
+-------------------------------
+[    0/40000]loss: 0.114500
+[12800/40000]loss: 0.095293
+[25600/40000]loss: 0.133112
+[38400/40000]loss: 0.053996
+net:
+Validate: 
+ Accuracy: 57.47%, Avg loss: 3.638002 
+
+Test: 
+ Accuracy: 56.75%, Avg loss: 3.681376 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 101
+-------------------------------
+[    0/40000]loss: 0.189900
+[12800/40000]loss: 0.118782
+[25600/40000]loss: 0.022302
+[38400/40000]loss: 0.133981
+net:
+Validate: 
+ Accuracy: 56.93%, Avg loss: 3.457880 
+
+Test: 
+ Accuracy: 56.47%, Avg loss: 3.505491 
+
+Best Validate: 
+ Accuracy: 57.85%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.92%, Avg loss: 3.148457 
+
+Epoch 102
+-------------------------------
+[    0/40000]loss: 0.107109
+[12800/40000]loss: 0.056303
+[25600/40000]loss: 0.056707
+[38400/40000]loss: 0.095200
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 57.97%, Avg loss: 3.510327 
+
+Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 103
+-------------------------------
+[    0/40000]loss: 0.021920
+[12800/40000]loss: 0.039381
+[25600/40000]loss: 0.058504
+[38400/40000]loss: 0.134201
+net:
+Validate: 
+ Accuracy: 57.25%, Avg loss: 3.577997 
+
+Test: 
+ Accuracy: 56.71%, Avg loss: 3.553406 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 104
+-------------------------------
+[    0/40000]loss: 0.111774
+[12800/40000]loss: 0.089768
+[25600/40000]loss: 0.099590
+[38400/40000]loss: 0.079079
+net:
+Validate: 
+ Accuracy: 57.60%, Avg loss: 3.417083 
+
+Test: 
+ Accuracy: 57.10%, Avg loss: 3.401609 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 105
+-------------------------------
+[    0/40000]loss: 0.033750
+[12800/40000]loss: 0.014823
+[25600/40000]loss: 0.033044
+[38400/40000]loss: 0.088513
+net:
+Validate: 
+ Accuracy: 57.06%, Avg loss: 3.466579 
+
+Test: 
+ Accuracy: 57.25%, Avg loss: 3.412238 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 106
+-------------------------------
+[    0/40000]loss: 0.137569
+[12800/40000]loss: 0.038687
+[25600/40000]loss: 0.065695
+[38400/40000]loss: 0.099347
+net:
+Validate: 
+ Accuracy: 57.61%, Avg loss: 3.621781 
+
+Test: 
+ Accuracy: 57.17%, Avg loss: 3.698191 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 107
+-------------------------------
+[    0/40000]loss: 0.048964
+[12800/40000]loss: 0.155090
+[25600/40000]loss: 0.037154
+[38400/40000]loss: 0.038959
+net:
+Validate: 
+ Accuracy: 56.70%, Avg loss: 3.489450 
+
+Test: 
+ Accuracy: 56.72%, Avg loss: 3.470844 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 108
+-------------------------------
+[    0/40000]loss: 0.142660
+[12800/40000]loss: 0.012761
+[25600/40000]loss: 0.051927
+[38400/40000]loss: 0.068920
+net:
+Validate: 
+ Accuracy: 57.79%, Avg loss: 3.452825 
+
+Test: 
+ Accuracy: 57.44%, Avg loss: 3.395945 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 109
+-------------------------------
+[    0/40000]loss: 0.056897
+[12800/40000]loss: 0.132134
+[25600/40000]loss: 0.108818
+[38400/40000]loss: 0.026980
+net:
+Validate: 
+ Accuracy: 56.88%, Avg loss: 3.563124 
+
+Test: 
+ Accuracy: 57.34%, Avg loss: 3.505519 
+
+Best Validate: 
+ Accuracy: 57.97%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 56.91%, Avg loss: 3.570263 
+
+Epoch 110
+-------------------------------
+[    0/40000]loss: 0.019278
+[12800/40000]loss: 0.078992
+[25600/40000]loss: 0.086958
+[38400/40000]loss: 0.109577
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.13%, Avg loss: 3.434000 
+
+Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 111
+-------------------------------
+[    0/40000]loss: 0.012074
+[12800/40000]loss: 0.031308
+[25600/40000]loss: 0.008127
+[38400/40000]loss: 0.042455
+net:
+Validate: 
+ Accuracy: 56.54%, Avg loss: 3.510968 
+
+Test: 
+ Accuracy: 57.04%, Avg loss: 3.544038 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 112
+-------------------------------
+[    0/40000]loss: 0.090201
+[12800/40000]loss: 0.067122
+[25600/40000]loss: 0.050657
+[38400/40000]loss: 0.049354
+net:
+Validate: 
+ Accuracy: 58.03%, Avg loss: 3.467224 
+
+Test: 
+ Accuracy: 57.19%, Avg loss: 3.537757 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 113
+-------------------------------
+[    0/40000]loss: 0.029812
+[12800/40000]loss: 0.095265
+[25600/40000]loss: 0.097897
+[38400/40000]loss: 0.081753
+net:
+Validate: 
+ Accuracy: 57.96%, Avg loss: 3.348225 
+
+Test: 
+ Accuracy: 57.96%, Avg loss: 3.341465 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 114
+-------------------------------
+[    0/40000]loss: 0.018239
+[12800/40000]loss: 0.010173
+[25600/40000]loss: 0.026175
+[38400/40000]loss: 0.018725
+net:
+Validate: 
+ Accuracy: 58.01%, Avg loss: 3.501926 
+
+Test: 
+ Accuracy: 57.51%, Avg loss: 3.552421 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 115
+-------------------------------
+[    0/40000]loss: 0.058376
+[12800/40000]loss: 0.032441
+[25600/40000]loss: 0.031634
+[38400/40000]loss: 0.061183
+net:
+Validate: 
+ Accuracy: 57.47%, Avg loss: 3.410681 
+
+Test: 
+ Accuracy: 56.93%, Avg loss: 3.437952 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 116
+-------------------------------
+[    0/40000]loss: 0.065671
+[12800/40000]loss: 0.188129
+[25600/40000]loss: 0.101706
+[38400/40000]loss: 0.055115
+net:
+Validate: 
+ Accuracy: 57.34%, Avg loss: 3.499621 
+
+Test: 
+ Accuracy: 57.48%, Avg loss: 3.454220 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 117
+-------------------------------
+[    0/40000]loss: 0.031153
+[12800/40000]loss: 0.030178
+[25600/40000]loss: 0.205400
+[38400/40000]loss: 0.163116
+net:
+Validate: 
+ Accuracy: 57.41%, Avg loss: 3.623215 
+
+Test: 
+ Accuracy: 56.90%, Avg loss: 3.693265 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 118
+-------------------------------
+[    0/40000]loss: 0.043071
+[12800/40000]loss: 0.031897
+[25600/40000]loss: 0.053470
+[38400/40000]loss: 0.104200
+net:
+Validate: 
+ Accuracy: 57.33%, Avg loss: 3.832689 
+
+Test: 
+ Accuracy: 57.20%, Avg loss: 3.792255 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 119
+-------------------------------
+[    0/40000]loss: 0.089624
+[12800/40000]loss: 0.212069
+[25600/40000]loss: 0.142759
+[38400/40000]loss: 0.066095
+net:
+Validate: 
+ Accuracy: 58.02%, Avg loss: 3.217138 
+
+Test: 
+ Accuracy: 57.82%, Avg loss: 3.237195 
+
+Best Validate: 
+ Accuracy: 58.13%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.52%, Avg loss: 3.430951 
+
+Epoch 120
+-------------------------------
+[    0/40000]loss: 0.014451
+[12800/40000]loss: 0.130888
+[25600/40000]loss: 0.200442
+[38400/40000]loss: 0.017663
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.37%, Avg loss: 3.435502 
+
+Test: 
+ Accuracy: 57.81%, Avg loss: 3.457467 
+
+Best Validate: 
+ Accuracy: 58.37%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.81%, Avg loss: 3.457467 
+
+Epoch 121
+-------------------------------
+[    0/40000]loss: 0.028244
+[12800/40000]loss: 0.154571
+[25600/40000]loss: 0.057671
+[38400/40000]loss: 0.026090
+net:
+Validate: 
+ Accuracy: 57.54%, Avg loss: 3.671547 
+
+Test: 
+ Accuracy: 57.12%, Avg loss: 3.735086 
+
+Best Validate: 
+ Accuracy: 58.37%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.81%, Avg loss: 3.457467 
+
+Epoch 122
+-------------------------------
+[    0/40000]loss: 0.038846
+[12800/40000]loss: 0.031740
+[25600/40000]loss: 0.048809
+[38400/40000]loss: 0.037188
+net:
+Validate: 
+ Accuracy: 57.86%, Avg loss: 3.686736 
+
+Test: 
+ Accuracy: 57.45%, Avg loss: 3.663206 
+
+Best Validate: 
+ Accuracy: 58.37%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.81%, Avg loss: 3.457467 
+
+Epoch 123
+-------------------------------
+[    0/40000]loss: 0.158536
+[12800/40000]loss: 0.154433
+[25600/40000]loss: 0.146316
+[38400/40000]loss: 0.078846
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.44%, Avg loss: 3.509699 
+
+Test: 
+ Accuracy: 57.51%, Avg loss: 3.552587 
+
+Best Validate: 
+ Accuracy: 58.44%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.51%, Avg loss: 3.552587 
+
+Epoch 124
+-------------------------------
+[    0/40000]loss: 0.076090
+[12800/40000]loss: 0.114970
+[25600/40000]loss: 0.050120
+[38400/40000]loss: 0.039895
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.52%, Avg loss: 3.469551 
+
+Test: 
+ Accuracy: 58.15%, Avg loss: 3.468697 
+
+Best Validate: 
+ Accuracy: 58.52%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.15%, Avg loss: 3.468697 
+
+Epoch 125
+-------------------------------
+[    0/40000]loss: 0.012380
+[12800/40000]loss: 0.043013
+[25600/40000]loss: 0.023973
+[38400/40000]loss: 0.036763
+net:
+Validate: 
+ Accuracy: 57.88%, Avg loss: 3.653337 
+
+Test: 
+ Accuracy: 57.87%, Avg loss: 3.675349 
+
+Best Validate: 
+ Accuracy: 58.52%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.15%, Avg loss: 3.468697 
+
+Epoch 126
+-------------------------------
+[    0/40000]loss: 0.056902
+[12800/40000]loss: 0.069076
+[25600/40000]loss: 0.118751
+[38400/40000]loss: 0.059784
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.56%, Avg loss: 3.365187 
+
+Test: 
+ Accuracy: 57.95%, Avg loss: 3.420201 
+
+Best Validate: 
+ Accuracy: 58.56%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.95%, Avg loss: 3.420201 
+
+Epoch 127
+-------------------------------
+[    0/40000]loss: 0.053341
+[12800/40000]loss: 0.029150
+[25600/40000]loss: 0.080334
+[38400/40000]loss: 0.021150
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 58.65%, Avg loss: 3.449034 
+
+Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 128
+-------------------------------
+[    0/40000]loss: 0.005587
+[12800/40000]loss: 0.014659
+[25600/40000]loss: 0.034594
+[38400/40000]loss: 0.060625
+net:
+Validate: 
+ Accuracy: 57.42%, Avg loss: 3.607212 
+
+Test: 
+ Accuracy: 56.68%, Avg loss: 3.630250 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 129
+-------------------------------
+[    0/40000]loss: 0.091228
+[12800/40000]loss: 0.016356
+[25600/40000]loss: 0.031758
+[38400/40000]loss: 0.070667
+net:
+Validate: 
+ Accuracy: 57.85%, Avg loss: 3.546257 
+
+Test: 
+ Accuracy: 56.58%, Avg loss: 3.634626 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 130
+-------------------------------
+[    0/40000]loss: 0.078054
+[12800/40000]loss: 0.019237
+[25600/40000]loss: 0.053109
+[38400/40000]loss: 0.007811
+net:
+Validate: 
+ Accuracy: 58.15%, Avg loss: 3.661285 
+
+Test: 
+ Accuracy: 58.16%, Avg loss: 3.761569 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 131
+-------------------------------
+[    0/40000]loss: 0.015332
+[12800/40000]loss: 0.125039
+[25600/40000]loss: 0.082880
+[38400/40000]loss: 0.052185
+net:
+Validate: 
+ Accuracy: 57.33%, Avg loss: 3.582953 
+
+Test: 
+ Accuracy: 57.19%, Avg loss: 3.553797 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 132
+-------------------------------
+[    0/40000]loss: 0.058293
+[12800/40000]loss: 0.075819
+[25600/40000]loss: 0.008989
+[38400/40000]loss: 0.018290
+net:
+Validate: 
+ Accuracy: 57.74%, Avg loss: 3.489905 
+
+Test: 
+ Accuracy: 57.38%, Avg loss: 3.498635 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 133
+-------------------------------
+[    0/40000]loss: 0.105560
+[12800/40000]loss: 0.066323
+[25600/40000]loss: 0.161064
+[38400/40000]loss: 0.030948
+net:
+Validate: 
+ Accuracy: 58.07%, Avg loss: 3.578360 
+
+Test: 
+ Accuracy: 57.40%, Avg loss: 3.596064 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 134
+-------------------------------
+[    0/40000]loss: 0.009511
+[12800/40000]loss: 0.052561
+[25600/40000]loss: 0.080630
+[38400/40000]loss: 0.008601
+net:
+Validate: 
+ Accuracy: 58.19%, Avg loss: 3.524577 
+
+Test: 
+ Accuracy: 58.49%, Avg loss: 3.502153 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 135
+-------------------------------
+[    0/40000]loss: 0.046207
+[12800/40000]loss: 0.026626
+[25600/40000]loss: 0.039613
+[38400/40000]loss: 0.070661
+net:
+Validate: 
+ Accuracy: 57.63%, Avg loss: 3.395541 
+
+Test: 
+ Accuracy: 56.99%, Avg loss: 3.395691 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 136
+-------------------------------
+[    0/40000]loss: 0.096524
+[12800/40000]loss: 0.067320
+[25600/40000]loss: 0.141311
+[38400/40000]loss: 0.026613
+net:
+Validate: 
+ Accuracy: 57.09%, Avg loss: 3.680934 
+
+Test: 
+ Accuracy: 57.09%, Avg loss: 3.665818 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 137
+-------------------------------
+[    0/40000]loss: 0.052583
+[12800/40000]loss: 0.122845
+[25600/40000]loss: 0.105163
+[38400/40000]loss: 0.010389
+net:
+Validate: 
+ Accuracy: 57.94%, Avg loss: 3.435492 
+
+Test: 
+ Accuracy: 57.39%, Avg loss: 3.364707 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 138
+-------------------------------
+[    0/40000]loss: 0.021347
+[12800/40000]loss: 0.085928
+[25600/40000]loss: 0.247476
+[38400/40000]loss: 0.045147
+net:
+Validate: 
+ Accuracy: 57.61%, Avg loss: 3.588079 
+
+Test: 
+ Accuracy: 57.58%, Avg loss: 3.546254 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 139
+-------------------------------
+[    0/40000]loss: 0.060218
+[12800/40000]loss: 0.118985
+[25600/40000]loss: 0.008297
+[38400/40000]loss: 0.075074
+net:
+Validate: 
+ Accuracy: 57.34%, Avg loss: 3.596004 
+
+Test: 
+ Accuracy: 57.02%, Avg loss: 3.634030 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 140
+-------------------------------
+[    0/40000]loss: 0.200455
+[12800/40000]loss: 0.006041
+[25600/40000]loss: 0.062821
+[38400/40000]loss: 0.075481
+net:
+Validate: 
+ Accuracy: 57.21%, Avg loss: 3.613858 
+
+Test: 
+ Accuracy: 57.34%, Avg loss: 3.678408 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 141
+-------------------------------
+[    0/40000]loss: 0.041616
+[12800/40000]loss: 0.054121
+[25600/40000]loss: 0.054532
+[38400/40000]loss: 0.016864
+net:
+Validate: 
+ Accuracy: 57.77%, Avg loss: 3.696659 
+
+Test: 
+ Accuracy: 57.51%, Avg loss: 3.757094 
+
+Best Validate: 
+ Accuracy: 58.65%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.17%, Avg loss: 3.466180 
+
+Epoch 142
+-------------------------------
+[    0/40000]loss: 0.032502
+[12800/40000]loss: 0.072234
+[25600/40000]loss: 0.033069
+[38400/40000]loss: 0.081311
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 59.06%, Avg loss: 3.715274 
+
+Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 143
+-------------------------------
+[    0/40000]loss: 0.009341
+[12800/40000]loss: 0.045158
+[25600/40000]loss: 0.012138
+[38400/40000]loss: 0.049382
+net:
+Validate: 
+ Accuracy: 58.12%, Avg loss: 3.737947 
+
+Test: 
+ Accuracy: 57.72%, Avg loss: 3.722114 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 144
+-------------------------------
+[    0/40000]loss: 0.013197
+[12800/40000]loss: 0.079535
+[25600/40000]loss: 0.052156
+[38400/40000]loss: 0.034214
+net:
+Validate: 
+ Accuracy: 58.87%, Avg loss: 3.687713 
+
+Test: 
+ Accuracy: 58.10%, Avg loss: 3.686986 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 145
+-------------------------------
+[    0/40000]loss: 0.018395
+[12800/40000]loss: 0.046495
+[25600/40000]loss: 0.042754
+[38400/40000]loss: 0.012042
+net:
+Validate: 
+ Accuracy: 57.82%, Avg loss: 3.795221 
+
+Test: 
+ Accuracy: 58.00%, Avg loss: 3.809452 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 146
+-------------------------------
+[    0/40000]loss: 0.073026
+[12800/40000]loss: 0.102400
+[25600/40000]loss: 0.052445
+[38400/40000]loss: 0.095206
+net:
+Validate: 
+ Accuracy: 57.87%, Avg loss: 3.246805 
+
+Test: 
+ Accuracy: 57.99%, Avg loss: 3.234868 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 147
+-------------------------------
+[    0/40000]loss: 0.080674
+[12800/40000]loss: 0.021702
+[25600/40000]loss: 0.032707
+[38400/40000]loss: 0.020475
+net:
+Validate: 
+ Accuracy: 57.55%, Avg loss: 4.037050 
+
+Test: 
+ Accuracy: 58.16%, Avg loss: 3.953029 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 148
+-------------------------------
+[    0/40000]loss: 0.030395
+[12800/40000]loss: 0.031429
+[25600/40000]loss: 0.022171
+[38400/40000]loss: 0.044456
+net:
+Validate: 
+ Accuracy: 56.46%, Avg loss: 3.731275 
+
+Test: 
+ Accuracy: 56.36%, Avg loss: 3.744958 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 149
+-------------------------------
+[    0/40000]loss: 0.068781
+[12800/40000]loss: 0.027863
+[25600/40000]loss: 0.086837
+[38400/40000]loss: 0.043826
+net:
+Validate: 
+ Accuracy: 58.36%, Avg loss: 3.478604 
+
+Test: 
+ Accuracy: 57.59%, Avg loss: 3.483697 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 150
+-------------------------------
+[    0/40000]loss: 0.011546
+[12800/40000]loss: 0.029816
+[25600/40000]loss: 0.083204
+[38400/40000]loss: 0.040858
+net:
+Validate: 
+ Accuracy: 58.43%, Avg loss: 3.576243 
+
+Test: 
+ Accuracy: 58.12%, Avg loss: 3.582993 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 151
+-------------------------------
+[    0/40000]loss: 0.060783
+[12800/40000]loss: 0.003564
+[25600/40000]loss: 0.015649
+[38400/40000]loss: 0.076405
+net:
+Validate: 
+ Accuracy: 58.35%, Avg loss: 3.529249 
+
+Test: 
+ Accuracy: 58.35%, Avg loss: 3.458989 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 152
+-------------------------------
+[    0/40000]loss: 0.063187
+[12800/40000]loss: 0.092574
+[25600/40000]loss: 0.038512
+[38400/40000]loss: 0.041600
+net:
+Validate: 
+ Accuracy: 57.77%, Avg loss: 3.869261 
+
+Test: 
+ Accuracy: 58.46%, Avg loss: 3.798435 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 153
+-------------------------------
+[    0/40000]loss: 0.083541
+[12800/40000]loss: 0.105911
+[25600/40000]loss: 0.118383
+[38400/40000]loss: 0.140956
+net:
+Validate: 
+ Accuracy: 56.93%, Avg loss: 3.631687 
+
+Test: 
+ Accuracy: 56.07%, Avg loss: 3.642209 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 154
+-------------------------------
+[    0/40000]loss: 0.191232
+[12800/40000]loss: 0.097066
+[25600/40000]loss: 0.073685
+[38400/40000]loss: 0.064222
+net:
+Validate: 
+ Accuracy: 58.66%, Avg loss: 3.602730 
+
+Test: 
+ Accuracy: 57.77%, Avg loss: 3.702872 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 155
+-------------------------------
+[    0/40000]loss: 0.033301
+[12800/40000]loss: 0.023504
+[25600/40000]loss: 0.034375
+[38400/40000]loss: 0.043673
+net:
+Validate: 
+ Accuracy: 58.24%, Avg loss: 3.787886 
+
+Test: 
+ Accuracy: 57.91%, Avg loss: 3.749099 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 156
+-------------------------------
+[    0/40000]loss: 0.066827
+[12800/40000]loss: 0.021564
+[25600/40000]loss: 0.057875
+[38400/40000]loss: 0.048306
+net:
+Validate: 
+ Accuracy: 58.32%, Avg loss: 3.790712 
+
+Test: 
+ Accuracy: 57.75%, Avg loss: 3.775515 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 157
+-------------------------------
+[    0/40000]loss: 0.058478
+[12800/40000]loss: 0.080159
+[25600/40000]loss: 0.197095
+[38400/40000]loss: 0.037769
+net:
+Validate: 
+ Accuracy: 58.81%, Avg loss: 3.461608 
+
+Test: 
+ Accuracy: 58.23%, Avg loss: 3.443705 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 158
+-------------------------------
+[    0/40000]loss: 0.021049
+[12800/40000]loss: 0.010032
+[25600/40000]loss: 0.047269
+[38400/40000]loss: 0.010886
+net:
+Validate: 
+ Accuracy: 57.26%, Avg loss: 3.757743 
+
+Test: 
+ Accuracy: 57.43%, Avg loss: 3.709095 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 159
+-------------------------------
+[    0/40000]loss: 0.089481
+[12800/40000]loss: 0.021754
+[25600/40000]loss: 0.002645
+[38400/40000]loss: 0.080763
+net:
+Validate: 
+ Accuracy: 57.59%, Avg loss: 3.825462 
+
+Test: 
+ Accuracy: 57.78%, Avg loss: 3.879194 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 160
+-------------------------------
+[    0/40000]loss: 0.122605
+[12800/40000]loss: 0.090575
+[25600/40000]loss: 0.019997
+[38400/40000]loss: 0.050848
+net:
+Validate: 
+ Accuracy: 57.62%, Avg loss: 3.443674 
+
+Test: 
+ Accuracy: 57.57%, Avg loss: 3.476646 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 161
+-------------------------------
+[    0/40000]loss: 0.021200
+[12800/40000]loss: 0.107743
+[25600/40000]loss: 0.040040
+[38400/40000]loss: 0.028108
+net:
+Validate: 
+ Accuracy: 58.11%, Avg loss: 3.759656 
+
+Test: 
+ Accuracy: 57.98%, Avg loss: 3.746583 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 162
+-------------------------------
+[    0/40000]loss: 0.049563
+[12800/40000]loss: 0.077048
+[25600/40000]loss: 0.036524
+[38400/40000]loss: 0.011069
+net:
+Validate: 
+ Accuracy: 58.02%, Avg loss: 3.709284 
+
+Test: 
+ Accuracy: 57.58%, Avg loss: 3.671808 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 163
+-------------------------------
+[    0/40000]loss: 0.032206
+[12800/40000]loss: 0.030819
+[25600/40000]loss: 0.053480
+[38400/40000]loss: 0.176377
+net:
+Validate: 
+ Accuracy: 58.47%, Avg loss: 3.754186 
+
+Test: 
+ Accuracy: 57.86%, Avg loss: 3.784035 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 164
+-------------------------------
+[    0/40000]loss: 0.098535
+[12800/40000]loss: 0.102320
+[25600/40000]loss: 0.075757
+[38400/40000]loss: 0.089549
+net:
+Validate: 
+ Accuracy: 57.67%, Avg loss: 3.592943 
+
+Test: 
+ Accuracy: 57.10%, Avg loss: 3.617227 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 165
+-------------------------------
+[    0/40000]loss: 0.046030
+[12800/40000]loss: 0.051610
+[25600/40000]loss: 0.015298
+[38400/40000]loss: 0.053133
+net:
+Validate: 
+ Accuracy: 57.97%, Avg loss: 3.738958 
+
+Test: 
+ Accuracy: 57.49%, Avg loss: 3.877184 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 166
+-------------------------------
+[    0/40000]loss: 0.034479
+[12800/40000]loss: 0.176216
+[25600/40000]loss: 0.077696
+[38400/40000]loss: 0.048983
+net:
+Validate: 
+ Accuracy: 58.01%, Avg loss: 3.680871 
+
+Test: 
+ Accuracy: 57.62%, Avg loss: 3.633805 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 167
+-------------------------------
+[    0/40000]loss: 0.030215
+[12800/40000]loss: 0.018978
+[25600/40000]loss: 0.066922
+[38400/40000]loss: 0.010184
+net:
+Validate: 
+ Accuracy: 57.82%, Avg loss: 3.902443 
+
+Test: 
+ Accuracy: 57.65%, Avg loss: 4.000316 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 168
+-------------------------------
+[    0/40000]loss: 0.070566
+[12800/40000]loss: 0.024223
+[25600/40000]loss: 0.083408
+[38400/40000]loss: 0.016671
+net:
+Validate: 
+ Accuracy: 58.58%, Avg loss: 3.850508 
+
+Test: 
+ Accuracy: 58.05%, Avg loss: 3.817985 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 169
+-------------------------------
+[    0/40000]loss: 0.042803
+[12800/40000]loss: 0.031382
+[25600/40000]loss: 0.002918
+[38400/40000]loss: 0.017911
+net:
+Validate: 
+ Accuracy: 58.60%, Avg loss: 4.050351 
+
+Test: 
+ Accuracy: 58.46%, Avg loss: 4.047078 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 170
+-------------------------------
+[    0/40000]loss: 0.032883
+[12800/40000]loss: 0.092112
+[25600/40000]loss: 0.076163
+[38400/40000]loss: 0.101825
+net:
+Validate: 
+ Accuracy: 59.05%, Avg loss: 3.746848 
+
+Test: 
+ Accuracy: 57.85%, Avg loss: 3.806981 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 171
+-------------------------------
+[    0/40000]loss: 0.024808
+[12800/40000]loss: 0.050917
+[25600/40000]loss: 0.051692
+[38400/40000]loss: 0.050710
+net:
+Validate: 
+ Accuracy: 58.81%, Avg loss: 4.093740 
+
+Test: 
+ Accuracy: 58.25%, Avg loss: 4.041087 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 172
+-------------------------------
+[    0/40000]loss: 0.026600
+[12800/40000]loss: 0.011944
+[25600/40000]loss: 0.073077
+[38400/40000]loss: 0.016243
+net:
+Validate: 
+ Accuracy: 58.24%, Avg loss: 3.643671 
+
+Test: 
+ Accuracy: 57.75%, Avg loss: 3.710743 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 173
+-------------------------------
+[    0/40000]loss: 0.009097
+[12800/40000]loss: 0.079922
+[25600/40000]loss: 0.074757
+[38400/40000]loss: 0.041815
+net:
+Validate: 
+ Accuracy: 57.47%, Avg loss: 3.797421 
+
+Test: 
+ Accuracy: 57.29%, Avg loss: 3.802803 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 174
+-------------------------------
+[    0/40000]loss: 0.064153
+[12800/40000]loss: 0.031227
+[25600/40000]loss: 0.031190
+[38400/40000]loss: 0.109486
+net:
+Validate: 
+ Accuracy: 58.20%, Avg loss: 3.562463 
+
+Test: 
+ Accuracy: 58.06%, Avg loss: 3.637961 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 175
+-------------------------------
+[    0/40000]loss: 0.011365
+[12800/40000]loss: 0.094879
+[25600/40000]loss: 0.005312
+[38400/40000]loss: 0.032633
+net:
+Validate: 
+ Accuracy: 58.72%, Avg loss: 3.810780 
+
+Test: 
+ Accuracy: 58.60%, Avg loss: 3.881231 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 176
+-------------------------------
+[    0/40000]loss: 0.058029
+[12800/40000]loss: 0.106035
+[25600/40000]loss: 0.090824
+[38400/40000]loss: 0.065532
+net:
+Validate: 
+ Accuracy: 58.55%, Avg loss: 3.532121 
+
+Test: 
+ Accuracy: 58.48%, Avg loss: 3.526310 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 177
+-------------------------------
+[    0/40000]loss: 0.019226
+[12800/40000]loss: 0.013002
+[25600/40000]loss: 0.120471
+[38400/40000]loss: 0.018531
+net:
+Validate: 
+ Accuracy: 57.69%, Avg loss: 3.821571 
+
+Test: 
+ Accuracy: 57.46%, Avg loss: 3.882892 
+
+Best Validate: 
+ Accuracy: 59.06%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 57.97%, Avg loss: 3.761267 
+
+Epoch 178
+-------------------------------
+[    0/40000]loss: 0.012506
+[12800/40000]loss: 0.003811
+[25600/40000]loss: 0.103726
+[38400/40000]loss: 0.027303
+net:
+------------------------ save model ------------------------
+Validate: 
+ Accuracy: 59.33%, Avg loss: 3.661651 
+
+Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 179
+-------------------------------
+[    0/40000]loss: 0.073474
+[12800/40000]loss: 0.012062
+[25600/40000]loss: 0.042068
+[38400/40000]loss: 0.019590
+net:
+Validate: 
+ Accuracy: 59.30%, Avg loss: 3.832289 
+
+Test: 
+ Accuracy: 59.06%, Avg loss: 3.858854 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 180
+-------------------------------
+[    0/40000]loss: 0.036729
+[12800/40000]loss: 0.085197
+[25600/40000]loss: 0.036104
+[38400/40000]loss: 0.164621
+net:
+Validate: 
+ Accuracy: 58.05%, Avg loss: 3.634973 
+
+Test: 
+ Accuracy: 57.72%, Avg loss: 3.635648 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 181
+-------------------------------
+[    0/40000]loss: 0.015087
+[12800/40000]loss: 0.059380
+[25600/40000]loss: 0.118203
+[38400/40000]loss: 0.005443
+net:
+Validate: 
+ Accuracy: 57.81%, Avg loss: 3.781908 
+
+Test: 
+ Accuracy: 57.95%, Avg loss: 3.808030 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 182
+-------------------------------
+[    0/40000]loss: 0.082672
+[12800/40000]loss: 0.108800
+[25600/40000]loss: 0.027780
+[38400/40000]loss: 0.070870
+net:
+Validate: 
+ Accuracy: 58.32%, Avg loss: 3.837514 
+
+Test: 
+ Accuracy: 58.35%, Avg loss: 3.787412 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 183
+-------------------------------
+[    0/40000]loss: 0.004027
+[12800/40000]loss: 0.102864
+[25600/40000]loss: 0.025868
+[38400/40000]loss: 0.020212
+net:
+Validate: 
+ Accuracy: 59.00%, Avg loss: 3.475362 
+
+Test: 
+ Accuracy: 58.70%, Avg loss: 3.466900 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 184
+-------------------------------
+[    0/40000]loss: 0.139110
+[12800/40000]loss: 0.049486
+[25600/40000]loss: 0.039999
+[38400/40000]loss: 0.230301
+net:
+Validate: 
+ Accuracy: 58.87%, Avg loss: 3.638146 
+
+Test: 
+ Accuracy: 58.44%, Avg loss: 3.702266 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 185
+-------------------------------
+[    0/40000]loss: 0.016350
+[12800/40000]loss: 0.044342
+[25600/40000]loss: 0.005467
+[38400/40000]loss: 0.010416
+net:
+Validate: 
+ Accuracy: 58.63%, Avg loss: 3.508101 
+
+Test: 
+ Accuracy: 58.20%, Avg loss: 3.602559 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 186
+-------------------------------
+[    0/40000]loss: 0.044247
+[12800/40000]loss: 0.013129
+[25600/40000]loss: 0.015102
+[38400/40000]loss: 0.100529
+net:
+Validate: 
+ Accuracy: 58.85%, Avg loss: 3.772872 
+
+Test: 
+ Accuracy: 57.79%, Avg loss: 3.803628 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 187
+-------------------------------
+[    0/40000]loss: 0.057046
+[12800/40000]loss: 0.085349
+[25600/40000]loss: 0.041777
+[38400/40000]loss: 0.034478
+net:
+Validate: 
+ Accuracy: 58.81%, Avg loss: 3.878284 
+
+Test: 
+ Accuracy: 57.69%, Avg loss: 4.039198 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 188
+-------------------------------
+[    0/40000]loss: 0.011755
+[12800/40000]loss: 0.027963
+[25600/40000]loss: 0.043034
+[38400/40000]loss: 0.050795
+net:
+Validate: 
+ Accuracy: 58.90%, Avg loss: 3.824937 
+
+Test: 
+ Accuracy: 58.10%, Avg loss: 3.904815 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 189
+-------------------------------
+[    0/40000]loss: 0.000638
+[12800/40000]loss: 0.029709
+[25600/40000]loss: 0.008189
+[38400/40000]loss: 0.072592
+net:
+Validate: 
+ Accuracy: 58.78%, Avg loss: 3.552461 
+
+Test: 
+ Accuracy: 58.34%, Avg loss: 3.547778 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 190
+-------------------------------
+[    0/40000]loss: 0.020889
+[12800/40000]loss: 0.004487
+[25600/40000]loss: 0.058139
+[38400/40000]loss: 0.046105
+net:
+Validate: 
+ Accuracy: 58.10%, Avg loss: 3.822323 
+
+Test: 
+ Accuracy: 57.49%, Avg loss: 3.819554 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 191
+-------------------------------
+[    0/40000]loss: 0.009204
+[12800/40000]loss: 0.113532
+[25600/40000]loss: 0.115134
+[38400/40000]loss: 0.068166
+net:
+Validate: 
+ Accuracy: 59.18%, Avg loss: 3.529397 
+
+Test: 
+ Accuracy: 58.47%, Avg loss: 3.580516 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 192
+-------------------------------
+[    0/40000]loss: 0.024957
+[12800/40000]loss: 0.002853
+[25600/40000]loss: 0.003464
+[38400/40000]loss: 0.113702
+net:
+Validate: 
+ Accuracy: 58.94%, Avg loss: 3.620481 
+
+Test: 
+ Accuracy: 58.23%, Avg loss: 3.753455 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 193
+-------------------------------
+[    0/40000]loss: 0.015451
+[12800/40000]loss: 0.117775
+[25600/40000]loss: 0.006808
+[38400/40000]loss: 0.115282
+net:
+Validate: 
+ Accuracy: 58.98%, Avg loss: 3.899642 
+
+Test: 
+ Accuracy: 58.13%, Avg loss: 4.003491 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 194
+-------------------------------
+[    0/40000]loss: 0.005103
+[12800/40000]loss: 0.051047
+[25600/40000]loss: 0.117089
+[38400/40000]loss: 0.022225
+net:
+Validate: 
+ Accuracy: 59.07%, Avg loss: 3.977599 
+
+Test: 
+ Accuracy: 58.05%, Avg loss: 4.013134 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 195
+-------------------------------
+[    0/40000]loss: 0.056225
+[12800/40000]loss: 0.035031
+[25600/40000]loss: 0.036410
+[38400/40000]loss: 0.002381
+net:
+Validate: 
+ Accuracy: 58.56%, Avg loss: 4.066497 
+
+Test: 
+ Accuracy: 58.20%, Avg loss: 4.010660 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 196
+-------------------------------
+[    0/40000]loss: 0.019454
+[12800/40000]loss: 0.169953
+[25600/40000]loss: 0.061603
+[38400/40000]loss: 0.013065
+net:
+Validate: 
+ Accuracy: 58.40%, Avg loss: 3.850578 
+
+Test: 
+ Accuracy: 58.32%, Avg loss: 3.795075 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 197
+-------------------------------
+[    0/40000]loss: 0.018127
+[12800/40000]loss: 0.020205
+[25600/40000]loss: 0.011504
+[38400/40000]loss: 0.029920
+net:
+Validate: 
+ Accuracy: 58.30%, Avg loss: 3.643313 
+
+Test: 
+ Accuracy: 57.90%, Avg loss: 3.608405 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 198
+-------------------------------
+[    0/40000]loss: 0.020998
+[12800/40000]loss: 0.011145
+[25600/40000]loss: 0.206899
+[38400/40000]loss: 0.111221
+net:
+Validate: 
+ Accuracy: 59.25%, Avg loss: 3.782054 
+
+Test: 
+ Accuracy: 58.63%, Avg loss: 3.850220 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 199
+-------------------------------
+[    0/40000]loss: 0.027848
+[12800/40000]loss: 0.027288
+[25600/40000]loss: 0.030832
+[38400/40000]loss: 0.023835
+net:
+Validate: 
+ Accuracy: 58.59%, Avg loss: 3.727073 
+
+Test: 
+ Accuracy: 57.53%, Avg loss: 3.856463 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+
+Epoch 200
+-------------------------------
+[    0/40000]loss: 0.023613
+[12800/40000]loss: 0.047509
+[25600/40000]loss: 0.017410
+[38400/40000]loss: 0.079717
+net:
+Validate: 
+ Accuracy: 58.68%, Avg loss: 3.861337 
+
+Test: 
+ Accuracy: 57.48%, Avg loss: 3.949554 
+
+Best Validate: 
+ Accuracy: 59.33%, Avg loss: 0.000000 
+
+Best Test: 
+ Accuracy: 58.69%, Avg loss: 3.749342 
+

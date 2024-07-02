@@ -1,0 +1,31 @@
+000 (1643847.000.000) 2024-06-17 22:10:33 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1643847.000.000) 2024-06-17 22:10:48 Job executing on host: <10.5.142.194:9618?addrs=10.5.142.194-9618&alias=SURGE-OG-10-5-142-194&noUDP&sock=startd_1220_65a1>
+...
+006 (1643847.000.000) 2024-06-17 22:10:56 Image size of job updated: 295672
+	166  -  MemoryUsage of job (MB)
+	169744  -  ResidentSetSize of job (KB)
+...
+006 (1643847.000.000) 2024-06-17 22:15:56 Image size of job updated: 11518308
+	2266  -  MemoryUsage of job (MB)
+	2319688  -  ResidentSetSize of job (KB)
+...
+005 (1643847.000.000) 2024-06-17 22:59:37 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:48:32, Sys 0 00:00:08  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:48:32, Sys 0 00:00:08  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     20927 
+	   GPUs                 :                           1 "GPU-9e431de3"
+	   GpusMemory (MB)      :  1876                       
+	   Memory (MB)          :  2266           1       128 
+
+	Job terminated of its own accord at 2024-06-18T02:59:37Z with exit-code 0.
+...

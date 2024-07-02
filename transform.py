@@ -3,6 +3,7 @@ from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
 
+
 class To_Tensor_Noise:
     def __init__(self,shape) -> None:
         self.shape = shape

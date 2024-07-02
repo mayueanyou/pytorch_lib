@@ -1,0 +1,43 @@
+000 (1643845.000.000) 2024-06-17 22:03:56 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1643845.000.000) 2024-06-17 22:04:16 Job executing on host: <10.5.141.168:9618?addrs=10.5.141.168-9618&alias=SURGE-OG-10-5-141-168&noUDP&sock=startd_1197_9ef4>
+...
+006 (1643845.000.000) 2024-06-17 22:04:25 Image size of job updated: 1357636
+	1302  -  MemoryUsage of job (MB)
+	1333084  -  ResidentSetSize of job (KB)
+...
+006 (1643845.000.000) 2024-06-17 22:09:26 Image size of job updated: 11549380
+	2264  -  MemoryUsage of job (MB)
+	2317784  -  ResidentSetSize of job (KB)
+...
+006 (1643845.000.000) 2024-06-17 22:19:26 Image size of job updated: 11549380
+	2264  -  MemoryUsage of job (MB)
+	2317788  -  ResidentSetSize of job (KB)
+...
+006 (1643845.000.000) 2024-06-17 22:24:27 Image size of job updated: 11549380
+	2264  -  MemoryUsage of job (MB)
+	2318032  -  ResidentSetSize of job (KB)
+...
+006 (1643845.000.000) 2024-06-17 22:29:28 Image size of job updated: 11549380
+	2264  -  MemoryUsage of job (MB)
+	2318152  -  ResidentSetSize of job (KB)
+...
+005 (1643845.000.000) 2024-06-17 22:54:00 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:49:32, Sys 0 00:00:07  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:49:32, Sys 0 00:00:07  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :     0.82                  1 "GPU-153b3da8"
+	   GpusMemory (MB)      :  1902                       
+	   Memory (MB)          :  2264           1       128 
+
+	Job terminated of its own accord at 2024-06-18T02:54:00Z with exit-code 0.
+...

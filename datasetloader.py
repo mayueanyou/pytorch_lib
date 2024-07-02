@@ -49,6 +49,20 @@ class CIFAR100:
     
     def loaders(self):
         return self.dataset_loader.get_loaders(target_list=self.target_list,label_setup=self.label_setup,batch_size=self.batch_size)
+    
+class ImageNet2012:
+    def __init__(self,dataset_path,training_transform,test_transform,target_list=None,label_setup=None,batch_size=64) -> None:
+        self.training_data = datasets.ImageNet(root=dataset_path,split='train',transform=training_transform)
+        self.test_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
+        self.validate_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
+        self.batch_size = batch_size
+        self.classes = None
+    
+    def loaders(self):
+        train_dataloader = DataLoader(self.training_data, batch_size = self.batch_size)
+        test_dataloader = DataLoader(self.test_data, batch_size = self.batch_size)
+        validate_dataloader = DataLoader(self.validate_data, batch_size = self.batch_size)
+        return train_dataloader,test_dataloader,validate_dataloader
 
 class CustomDataset(Dataset):
     def __init__(self, data, targets, normalize = False):

@@ -76,6 +76,7 @@ class Net():
         self.basic_info["best_validate_accuracy"] = validate_accuracy
         self.basic_info["best_test_accuracy"] = test_accuracy
         self.basic_info["best_test_loss"] = test_loss
+        self.basic_info["best_module"] = self.net_str
         self.save()
     
      #------------------------save&load------------------------

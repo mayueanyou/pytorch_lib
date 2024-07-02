@@ -1,0 +1,28 @@
+000 (1643819.000.000) 2024-06-17 16:12:09 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1643819.000.000) 2024-06-17 16:12:25 Job executing on host: <10.5.141.193:9618?addrs=10.5.141.193-9618&alias=SURGE-OG-10-5-141-193&noUDP&sock=startd_1229_91fc>
+...
+006 (1643819.000.000) 2024-06-17 16:12:33 Image size of job updated: 203408
+	199  -  MemoryUsage of job (MB)
+	202880  -  ResidentSetSize of job (KB)
+...
+006 (1643819.000.000) 2024-06-17 16:17:33 Image size of job updated: 11648968
+	2266  -  MemoryUsage of job (MB)
+	2319380  -  ResidentSetSize of job (KB)
+...
+004 (1643819.000.000) 2024-06-17 16:23:26 Job was evicted.
+	(0) CPU times
+		Usr 0 00:10:54, Sys 0 00:00:03  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     20859 
+	   GPUs                 :     0.68                  1 "GPU-78d0cb08"
+	   GpusMemory (MB)      :  1972                       
+	   Memory (MB)          :  2266           1       128 
+...
+009 (1643819.000.000) 2024-06-17 16:23:26 Job was aborted.
+	via condor_rm (by user yma183)
+...

@@ -1,0 +1,55 @@
+000 (1643832.000.000) 2024-06-17 16:35:23 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+007 (1643831.000.000) 2024-06-17 16:35:35 Shadow exception!
+	Error from slot1@SURGE-OG-10-5-141-225: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_1_fftt/out' as standard output: Stale file handle (errno 116)
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (1643831.000.000) 2024-06-17 16:35:35 Job was held.
+	Error from slot1@SURGE-OG-10-5-141-225: Failed to open '/home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Vit_1_fftt/out' as standard output: Stale file handle (errno 116)
+	Code 7 Subcode 116
+...
+001 (1643832.000.000) 2024-06-17 16:35:35 Job executing on host: <10.5.141.224:9618?addrs=10.5.141.224-9618&alias=SURGE-OG-10-5-141-224&noUDP&sock=startd_1186_1369>
+...
+006 (1643832.000.000) 2024-06-17 16:35:43 Image size of job updated: 2258540
+	169  -  MemoryUsage of job (MB)
+	172960  -  ResidentSetSize of job (KB)
+...
+009 (1643828.000.000) 2024-06-17 16:35:51 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1643829.000.000) 2024-06-17 16:35:51 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1643830.000.000) 2024-06-17 16:35:51 Job was aborted.
+	via condor_rm (by user yma183)
+...
+009 (1643831.000.000) 2024-06-17 16:36:35 Job was aborted.
+	via condor_rm (by user yma183)
+...
+006 (1643832.000.000) 2024-06-17 16:40:43 Image size of job updated: 11518496
+	2268  -  MemoryUsage of job (MB)
+	2321688  -  ResidentSetSize of job (KB)
+...
+006 (1643832.000.000) 2024-06-17 17:00:44 Image size of job updated: 11527712
+	2277  -  MemoryUsage of job (MB)
+	2330796  -  ResidentSetSize of job (KB)
+...
+005 (1643832.000.000) 2024-06-17 17:29:40 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:53:51, Sys 0 00:00:08  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:53:51, Sys 0 00:00:08  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :                           1 "GPU-3db5dfdc"
+	   Memory (MB)          :  2277           1       128 
+
+	Job terminated of its own accord at 2024-06-17T21:29:40Z with exit-code 0.
+...

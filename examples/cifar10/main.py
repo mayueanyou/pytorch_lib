@@ -1,5 +1,7 @@
 import os,sys,torch,random,argparse
 import numpy as np
+from torchvision import transforms
+from torchvision.transforms import ToTensor, Grayscale, Compose
 
 from module import*
 import pytorch_lib as pl
@@ -15,7 +17,9 @@ dataset_path = "~/datasets"
 current_path =  os.path.abspath(os.path.dirname(__file__) + os.path.sep + ".")
 
 def main(name):
-    dataset = pl.CIFAR10(dataset_path,batch_size=128)
+    #tf = Compose([ToTensor(),Grayscale()])
+    tf = ToTensor()
+    dataset = pl.CIFAR10(dataset_path,batch_size=128,training_transform=tf,test_transform=tf)
     training_data,test_data,validate_data = dataset.loaders()
     net = pl.Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/',loss=CELoss())
     trainer = pl.Trainer(net,training_data,test_data,validate_data)

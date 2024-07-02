@@ -1,0 +1,42 @@
+000 (1643855.000.000) 2024-06-17 23:29:26 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1643855.000.000) 2024-06-17 23:29:40 Job executing on host: <10.5.141.224:9618?addrs=10.5.141.224-9618&alias=SURGE-OG-10-5-141-224&noUDP&sock=startd_1186_1369>
+...
+006 (1643855.000.000) 2024-06-17 23:29:48 Image size of job updated: 1066680
+	1018  -  MemoryUsage of job (MB)
+	1042128  -  ResidentSetSize of job (KB)
+...
+006 (1643855.000.000) 2024-06-17 23:34:48 Image size of job updated: 11384804
+	2264  -  MemoryUsage of job (MB)
+	2317968  -  ResidentSetSize of job (KB)
+...
+006 (1643855.000.000) 2024-06-17 23:39:49 Image size of job updated: 11385032
+	2264  -  MemoryUsage of job (MB)
+	2318100  -  ResidentSetSize of job (KB)
+...
+006 (1643855.000.000) 2024-06-17 23:54:50 Image size of job updated: 11385032
+	2264  -  MemoryUsage of job (MB)
+	2318108  -  ResidentSetSize of job (KB)
+...
+006 (1643855.000.000) 2024-06-18 00:14:52 Image size of job updated: 11386340
+	2265  -  MemoryUsage of job (MB)
+	2319296  -  ResidentSetSize of job (KB)
+...
+005 (1643855.000.000) 2024-06-18 00:20:04 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:50:14, Sys 0 00:00:06  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:50:14, Sys 0 00:00:06  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :                           1 "GPU-ce5160a7"
+	   Memory (MB)          :  2265           1       128 
+
+	Job terminated of its own accord at 2024-06-18T04:20:05Z with exit-code 0.
+...

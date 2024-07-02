@@ -93,94 +93,6 @@ class Test2(nn.Module):
         x = self.fc(x)
         return x
 
-class Test3(nn.Module):
-    def __init__(self,basic_dim=512,att_channle=17):
-        super().__init__()
-        self.name = type(self).__name__
-        self.conv1 = cnn_cell(3,64,3,1,1,bias=False)
-        self.layer1 = residual_cell(64, 64, 2, 1)
-        self.layer2 = residual_cell(64, 128, 2, 2)
-        self.layer3 = residual_cell(128, 256, 2, 2)
-        self.layer4 = residual_cell(256, 512, 2, 2)
-        
-        
-        self.att1 = nn.Sequential(PreNorm(1024, Attention(64,128)), PreNorm(1024, Attention(128,64)))
-        self.att2 = nn.Sequential(PreNorm(1024, Attention(64,128)),PreNorm(1024, Attention(128,64)))
-        self.att3 = nn.Sequential(PreNorm(256, Attention(128,256)),PreNorm(256, Attention(256,128)))
-        self.att4 = nn.Sequential(PreNorm(64, Attention(256,512)),PreNorm(64, Attention(512,256)))
-        self.att5 = nn.Sequential(PreNorm(16, Attention(512,1024)),PreNorm(16, Attention(1024,512)))
-        self.fc = nn.Linear(512, 10)
-    
-    def forward(self,x):
-        def cell(x,conv,att):
-            x = conv(x)
-            h,w = x.shape[-2],x.shape[-1]
-            x = x.flatten(-2,-1)
-            x = att(x)
-            x = rearrange(x, 'b c (h w) -> b c h w', h=h, w=w)
-            return x
-        
-        x = cell(x,self.conv1,self.att1)
-        
-        x = cell(x,self.layer1,self.att2)
-        x = cell(x,self.layer2,self.att3)
-        x = cell(x,self.layer3,self.att4)
-        x = cell(x,self.layer4,self.att5)
-        x = F.avg_pool2d(x, 4)
-        x = x.view(x.size(0), -1)
-        
-        x = self.fc(x)
-        return x
-
-class Test4(nn.Module):
-    def __init__(self,basic_dim=9,att_channle=17):
-        super().__init__()
-        self.name = type(self).__name__
-        self.patch = ImageToPatches(image_size=32,patch_size=1,dim_out=basic_dim,position=False,cls_token=False)
-        self.att1 = AttentionWrap(1024,1024,basic_dim)
-        self.att2 = AttentionWrap(1024,512,basic_dim)
-        self.att3 = AttentionWrap(512,512,basic_dim)
-        self.att4 = AttentionWrap(512,256,basic_dim)
-        self.att5 = AttentionWrap(256,256,basic_dim)
-        self.att6 = AttentionWrap(256,128,basic_dim)
-        self.att7 = AttentionWrap(128,128,basic_dim)
-        self.att8 = AttentionWrap(128,64,basic_dim)
-        self.att9 = AttentionWrap(64,64,basic_dim)
-        self.fc = nn.Linear(64*basic_dim,10)
-        
-        
-    
-    def forward(self,x):
-        x = self.patch(x)
-        x = self.att1(x)
-        x = self.att2(x)
-        x = self.att3(x)
-        x = self.att4(x)
-        x = self.att5(x)
-        x = self.att6(x)
-        x = self.att7(x)
-        x = self.att8(x)
-        x = self.att9(x)
-        x = self.fc(x.flatten(-2,-1))
-        return x
-
-class Test5(nn.Module):
-    def __init__(self,basic_dim=3,att_channle=17):
-        super().__init__()
-        self.name = type(self).__name__
-        self.patch = ImageToPatches(image_size=32,patch_size=1,dim_out=basic_dim,position=False,cls_token=False)
-        self.att1 = nn.Sequential(*([AttentionWrap(1024,1024,basic_dim)]*5))
-        self.resnet = ResNet_original()
-        
-        
-    
-    def forward(self,x):
-        x = self.patch(x)
-        x = self.att1(x)
-        x = rearrange(x, 'b (h w) c-> b c h w', h=32, w=32)
-        x = self.resnet(x)
-        return x
-
 class Test6(nn.Module):
     def __init__(self,basic_dim=1,att_channle=17):
         super().__init__()
@@ -194,5 +106,110 @@ class Test6(nn.Module):
         x = self.att1(x)
         x = self.resnet(x)
         
+        return x
+
+class Vit(nn.Module):
+    def __init__(self,image_size=32,patch_size=4,input_channel=3,att_dim=128,depth=6,heads=4,mlp_dim=256,num_cls=10):
+        super().__init__()
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttention(att_dim,heads,linear_projection={'q':True,'k':True,'v':True,'o':True},increase_dim=True)))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+class Vit_p32(nn.Module):
+    def __init__(self,image_size=32,patch_size=32,input_channel=3,att_dim=128,depth=6,heads=4,mlp_dim=256,num_cls=10):
+        super().__init__()
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,patch_projection = 'LinearPatches',input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttention(att_dim,heads,linear_projection={'q':True,'k':True,'v':True,'o':True},increase_dim=True)))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+class Vit_2(nn.Module):
+    def __init__(self,image_size=32,patch_size=8,input_channel=3,att_dim=512,depth=6,heads=8,mlp_dim=3072,num_cls=10):
+        super().__init__()
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttentionFilter(att_dim,17,17,linear_projection={'v':False,'o':False})))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+class Vit_3(nn.Module):
+    def __init__(self,image_size=32,patch_size=8,input_channel=3,att_dim=512,depth=6,heads=8,mlp_dim=3072,num_cls=10):
+        super().__init__()
+        v = False
+        o = False
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttentionExternalProjection(
+                                           att_dim,heads,projection={'q':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'k':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'v':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o}),
+                                                                     'o':SelfAttentionFilter(att_dim,17,17,linear_projection={'v':v,'o':o})})))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+class Att(nn.Module):
+    def __init__(self,image_size=32,patch_size=4,input_channel=3,att_dim=128,depth=6,heads=4,mlp_dim=256,num_cls=10):
+        super().__init__()
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,
+                                       AttentionWrap(att_dim,SelfAttention(att_dim,heads,linear_projection={'q':True,'k':True,'v':True,'o':True},increase_dim=False)))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+        self.to_cls_token = nn.Identity()
+    
+    def forward(self, img, mask=None):
+        #p = self.patch_size
+        #x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=p, p2=p)
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = self.to_cls_token(x[:, 0])
+        return self.mlp_head(x)
+
+class MlpMixter(nn.Module):
+    def __init__(self,image_size=32,patch_size=8,input_channel=3,att_dim=128,depth=6,mlp_dim=256,num_cls=10):
+        super().__init__()
+        self.patch_to_embedding = ImageToPatches(image_size,patch_size,att_dim,input_channel=input_channel,patch_projection = 'LinearPatches',position=False,cls_token=False)
+        self.transformer = Transformer(att_dim,mlp_dim,depth,AttentionWrap(att_dim,Mixer(att_dim,16)))
+        self.mlp_head = fnn_cell(att_dim,mlp_dim,num_cls)
+    
+    def forward(self, img, mask=None):
+        x = self.patch_to_embedding(img)
+        x = self.transformer(x, mask)
+        x = torch.mean(x,dim = 1)
+        x = self.mlp_head(x)
         return x
 

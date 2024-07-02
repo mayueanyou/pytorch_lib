@@ -1,0 +1,43 @@
+000 (1646257.000.000) 2024-06-18 15:34:48 Job submitted from host: <10.5.0.95:9618?addrs=10.5.0.95-9618&alias=its-og-login3.syr.edu&noUDP&sock=schedd_1976_f33b>
+...
+001 (1646257.000.000) 2024-06-18 15:35:12 Job executing on host: <10.5.141.168:9618?addrs=10.5.141.168-9618&alias=SURGE-OG-10-5-141-168&noUDP&sock=startd_1197_9ef4>
+...
+006 (1646257.000.000) 2024-06-18 15:35:21 Image size of job updated: 2473024
+	212  -  MemoryUsage of job (MB)
+	216372  -  ResidentSetSize of job (KB)
+...
+006 (1646257.000.000) 2024-06-18 15:40:22 Image size of job updated: 13415340
+	2985  -  MemoryUsage of job (MB)
+	3055952  -  ResidentSetSize of job (KB)
+...
+006 (1646257.000.000) 2024-06-18 15:50:22 Image size of job updated: 13415340
+	2985  -  MemoryUsage of job (MB)
+	3056160  -  ResidentSetSize of job (KB)
+...
+006 (1646257.000.000) 2024-06-18 16:05:24 Image size of job updated: 13415340
+	2985  -  MemoryUsage of job (MB)
+	3056168  -  ResidentSetSize of job (KB)
+...
+006 (1646257.000.000) 2024-06-18 16:15:25 Image size of job updated: 13415340
+	2985  -  MemoryUsage of job (MB)
+	3056176  -  ResidentSetSize of job (KB)
+...
+005 (1646257.000.000) 2024-06-18 16:24:01 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:48:27, Sys 0 00:00:13  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:48:27, Sys 0 00:00:13  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.00        1         1 
+	   Disk (KB)            :     1           1     21462 
+	   GPUs                 :     0.40                  1 "GPU-c5d84dee"
+	   GpusMemory (MB)      :  2010                       
+	   Memory (MB)          :  2985           1       128 
+
+	Job terminated of its own accord at 2024-06-18T20:24:01Z with exit-code 0.
+...

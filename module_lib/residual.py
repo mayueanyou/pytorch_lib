@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 from . import*
 
+
 class Residual(nn.Module):
     def __init__(self, layers,transform=None,learnable_rate={'x':False,'tx':False}):
         super().__init__()

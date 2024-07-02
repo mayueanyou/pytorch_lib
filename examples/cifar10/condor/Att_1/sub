@@ -1,0 +1,8 @@
+executable = /home/yma183/python_packages/condor_src/conda_wrapper
+arguments = py3.10 /home/yma183/python_packages/pytorch_lib/examples/cifar10/main.py -f main -net Att
+error= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Att_1/err
+output= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Att_1/out
+log= /home/yma183/python_packages/pytorch_lib/examples/cifar10/condor/Att_1/log
+Requirements = (TotalGPUs > 0)&&(Machine != "SURGE-OG-10-5-141-225")
++request_gpus = 1
+queue
