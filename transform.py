@@ -28,6 +28,28 @@ class RGB_Add_Gray:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
+class PermuteChannle:
+    def __init__(self,order) -> None:
+        self.order = order
+
+    def __call__(self, data):
+        data = data.permute(self.order)
+        return data
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+class PermuteColor:
+    def __init__(self,order) -> None:
+        self.order = order
+
+    def __call__(self, data):
+        data = data[self.order,:]
+        return data
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
 class RGB_Extension:
     def __init__(self) -> None:
         pass

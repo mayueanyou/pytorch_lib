@@ -57,6 +57,7 @@ class Net():
         print(f'total parameters: {self.basic_info["parameters"]:,}')
         print(f'optimizer: {self.basic_info["optimizer"]}')
         print(f'best_module: \n{self.basic_info["best_module"]}\n')
+        print(f'extra_info: \n{self.extra_info}\n')
     
     #------------------------update_function------------------------
     
@@ -91,7 +92,7 @@ class Net():
         if not os.path.isfile(self.model_path()): return
         data = torch.load(self.model_path() ,map_location=self.device)
         self.basic_info = data['basic_info']
-        self.best_extra_info = data['extra_info']
+        self.extra_info = data['extra_info']
         if load_model: 
             self.net.load_state_dict(data['net'])
             print('------------------------','load model','------------------------')

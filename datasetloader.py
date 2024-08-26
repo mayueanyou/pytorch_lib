@@ -13,6 +13,7 @@ class MNIST:
         self.label_setup = label_setup
         self.batch_size = batch_size
         self.classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        self.name = 'MNIST'
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -28,6 +29,7 @@ class CIFAR10:
         self.label_setup = label_setup
         self.batch_size = batch_size
         self.classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+        self.name = 'CIFAR10'
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -42,7 +44,17 @@ class CIFAR100:
         self.target_list = target_list
         self.label_setup = label_setup
         self.batch_size = batch_size
-        self.classes = None
+        self.classes = ['apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee', 'beetle', 'bicycle', 'bottle',
+                        'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel', 'can', 'castle', 'caterpillar', 'cattle',
+                        'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach', 'couch', 'crab', 'crocodile', 'cup', 'dinosaur',
+                        'dolphin', 'elephant', 'flatfish', 'forest', 'fox', 'girl', 'hamster', 'house', 'kangaroo', 'keyboard',
+                        'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain',
+                        'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid', 'otter', 'palm_tree', 'pear', 'pickup_truck', 'pine_tree',
+                        'plain', 'plate', 'poppy', 'porcupine', 'possum', 'rabbit', 'raccoon', 'ray', 'road', 'rocket',
+                        'rose', 'sea', 'seal', 'shark', 'shrew', 'skunk', 'skyscraper', 'snail', 'snake', 'spider',
+                        'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table', 'tank', 'telephone', 'television', 'tiger', 'tractor',
+                        'train', 'trout', 'tulip', 'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman', 'worm']
+        self.name = 'CIFAR100'
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -57,6 +69,7 @@ class ImageNet2012:
         self.validate_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
         self.batch_size = batch_size
         self.classes = None
+        self.name = 'ImageNet2012'
     
     def loaders(self):
         train_dataloader = DataLoader(self.training_data, batch_size = self.batch_size)
@@ -69,8 +82,8 @@ class CustomDataset(Dataset):
         self.data = data
         self.targets = targets
         if normalize: self.normalize()
-        self.data_shape = data[0].shape
-        self.targets_shape = targets[0].shape
+        self.data_shape = data.shape
+        self.targets_shape = targets.shape
         print(f'data shape: {self.data_shape}')
         print(f'targets shape: {self.targets_shape}')
     
@@ -83,6 +96,19 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         return self.data[index], self.targets[index]
+
+class CustomDatasetLoader:
+    def __init__(self,train_data,test_data,validate_data,batch_size=64) -> None:
+        self.train_data = train_data
+        self.test_data = test_data
+        self.validate_data = validate_data
+        self.batch_size = batch_size
+    
+    def loaders(self):
+        train_dataloader = DataLoader(self.train_data, batch_size = self.batch_size)
+        test_dataloader = DataLoader(self.test_data, batch_size = self.batch_size)
+        validate_dataloader = DataLoader(self.validate_data, batch_size = self.batch_size)
+        return train_dataloader,test_dataloader,validate_dataloader
 
 class DatasetLoader():
     def __init__(self,train_data,test_data) -> None:
