@@ -9,7 +9,7 @@ class ClipWrapper():
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.available_models = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'RN50x64', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px']
         self.model_name = self.available_models[model_sel]
-        print(self.model_name)
+        print("Clip: " + self.model_name)
         self.model, self.preprocess = clip.load(self.model_name, self.device)
         self.classes = classes
         #print(clip.available_models())

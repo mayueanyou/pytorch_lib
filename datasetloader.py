@@ -1,4 +1,4 @@
-import os,sys,copy,torch,random,cv2,torchvision
+import os,sys,copy,torch,random,cv2,torchvision,json
 from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
@@ -14,6 +14,7 @@ class MNIST:
         self.batch_size = batch_size
         self.classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         self.name = 'MNIST'
+        print(self.name)
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -30,6 +31,7 @@ class CIFAR10:
         self.batch_size = batch_size
         self.classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
         self.name = 'CIFAR10'
+        print(self.name)
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -44,17 +46,14 @@ class CIFAR100:
         self.target_list = target_list
         self.label_setup = label_setup
         self.batch_size = batch_size
-        self.classes = ['apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee', 'beetle', 'bicycle', 'bottle',
-                        'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel', 'can', 'castle', 'caterpillar', 'cattle',
-                        'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach', 'couch', 'crab', 'crocodile', 'cup', 'dinosaur',
-                        'dolphin', 'elephant', 'flatfish', 'forest', 'fox', 'girl', 'hamster', 'house', 'kangaroo', 'keyboard',
-                        'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain',
-                        'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid', 'otter', 'palm_tree', 'pear', 'pickup_truck', 'pine_tree',
-                        'plain', 'plate', 'poppy', 'porcupine', 'possum', 'rabbit', 'raccoon', 'ray', 'road', 'rocket',
-                        'rose', 'sea', 'seal', 'shark', 'shrew', 'skunk', 'skyscraper', 'snail', 'snake', 'spider',
-                        'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table', 'tank', 'telephone', 'television', 'tiger', 'tractor',
-                        'train', 'trout', 'tulip', 'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman', 'worm']
         self.name = 'CIFAR100'
+        print(self.name)
+        self.get_classes()
+    
+    def get_classes(self):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + f'/dataset_supplementary/{self.name}/classes.txt', 'r') as file: self.classes_original = json.loads(file.read())
+        self.classes = list(self.classes_original.values())
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -68,8 +67,14 @@ class ImageNet2012:
         self.test_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
         self.validate_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
         self.batch_size = batch_size
-        self.classes = None
         self.name = 'ImageNet2012'
+        print(self.name)
+        self.get_classes()
+    
+    def get_classes(self):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + f'/dataset_supplementary/{self.name}/classes.txt', 'r') as file: self.classes_original = json.loads(file.read())
+        self.classes = list(self.classes_original.values())
     
     def loaders(self):
         train_dataloader = DataLoader(self.training_data, batch_size = self.batch_size)

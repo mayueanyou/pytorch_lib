@@ -2,6 +2,29 @@ import os,sys,torch
 from torch import nn
 import torch.nn.functional as F
 
+class ClipLoss():
+    def __init__(self,text_features) -> None:
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.text_features = text_features
+        self.text_features /= self.text_features.norm(dim=-1, keepdim=True)
+        self.loss_fn_text = nn.CrossEntropyLoss(label_smoothing=0)
+        self.loss_fn_image = nn.CrossEntropyLoss(label_smoothing=0)
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+        
+    def calculate_correct(self,pred,labels):
+        image_features = pred
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        similarity = (100.0 * image_features @ self.text_features.T).softmax(dim=-1)
+        values, indices = similarity.topk(1)
+        indices = torch.flatten(indices)
+        result = torch.eq(labels.to(self.device),indices.to(self.device))
+        acc = torch.sum(result)/len(labels)
+        return acc
+    
+    def calculate_loss(self,pred,label):
+        return self.loss_fn(torch.tensor([0]),torch.tensor([0]))
+        return self.loss_fn(pred,label)
+
 class CELoss():
     def __init__(self) -> None:
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
