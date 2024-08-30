@@ -13,3 +13,11 @@ class Fnn(nn.Module):
 def fnn_cell(dim_in,dim_hidden,dim_out):
     layers = [nn.Linear(dim_in,dim_hidden),nn.GELU(),nn.Linear(dim_hidden,dim_out)]
     return nn.Sequential(*layers)
+
+class Idnn(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer = nn.Identity()
+        
+    def forward(self,x):
+        return self.layer(x)

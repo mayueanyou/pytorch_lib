@@ -14,7 +14,7 @@ class MNIST:
         self.batch_size = batch_size
         self.classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         self.name = 'MNIST'
-        print(self.name)
+        print('Dataset: ',self.name)
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -31,7 +31,7 @@ class CIFAR10:
         self.batch_size = batch_size
         self.classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
         self.name = 'CIFAR10'
-        print(self.name)
+        print('Dataset: ',self.name)
     
     def datas(self):
         return self.dataset_loader.get_datas(target_list=self.target_list,label_setup=self.label_setup)
@@ -47,7 +47,7 @@ class CIFAR100:
         self.label_setup = label_setup
         self.batch_size = batch_size
         self.name = 'CIFAR100'
-        print(self.name)
+        print('Dataset: ',self.name)
         self.get_classes()
     
     def get_classes(self):
@@ -68,7 +68,7 @@ class ImageNet2012:
         self.validate_data = datasets.ImageNet(root=dataset_path,split='val',transform=test_transform)
         self.batch_size = batch_size
         self.name = 'ImageNet2012'
-        print(self.name)
+        print('Dataset: ',self.name)
         self.get_classes()
     
     def get_classes(self):
@@ -83,14 +83,16 @@ class ImageNet2012:
         return train_dataloader,test_dataloader,validate_dataloader
 
 class CustomDataset(Dataset):
-    def __init__(self, data, targets, normalize = False):
+    def __init__(self, data, targets, normalize = False,data_transform=None,target_transform=None):
         self.data = data
         self.targets = targets
         if normalize: self.normalize()
         self.data_shape = data.shape
         self.targets_shape = targets.shape
-        print(f'data shape: {self.data_shape}')
-        print(f'targets shape: {self.targets_shape}')
+        self.data_transform = data_transform
+        self.target_transform = target_transform
+        #print(f'data shape: {self.data_shape}')
+        #print(f'targets shape: {self.targets_shape}')
     
     def normalize(self):
         self.data = torch.div(self.data, torch.max(self.data,dim=0).values)
@@ -100,10 +102,12 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
+        if self.data_transform is not None: self.data[index] = self.data_transform(self.data[index])
+        if self.target_transform is not None: self.targets[index] = self.target_transform(self.targets[index])
         return self.data[index], self.targets[index]
 
 class CustomDatasetLoader:
-    def __init__(self,train_data,test_data,validate_data,batch_size=64) -> None:
+    def __init__(self,train_data,test_data,validate_data,target_list=None,label_setup=None,batch_size=64) -> None:
         self.train_data = train_data
         self.test_data = test_data
         self.validate_data = validate_data
@@ -116,12 +120,17 @@ class CustomDatasetLoader:
         return train_dataloader,test_dataloader,validate_dataloader
 
 class DatasetLoader():
-    def __init__(self,train_data,test_data) -> None:
+    def __init__(self,train_data,test_data,validate_data=None) -> None:
         self.validate_rate = 0.2
         self.train_data = train_data
         if not torch.is_tensor(self.train_data.targets): self.train_data.targets = torch.tensor(self.train_data.targets)
         self.test_data = test_data
         if not torch.is_tensor(self.test_data.targets): self.test_data.targets = torch.tensor(self.test_data.targets)
+        if validate_data is not None:
+            self.validate_data = validate_data
+            if not torch.is_tensor(self.validate_data.targets): self.validate_data.targets = torch.tensor(self.validate_data.targets)
+        else:
+            self.train_data,self.validate_data =  self.dataset_separate_validate(self.train_data)
     
     def print_info(self,train,test,validate,batch_size):
         print(f'batch size: {batch_size}')
@@ -186,18 +195,8 @@ class DatasetLoader():
             data = self.dataset_change_label(data,label_setup) if label_setup is not None else data
             return data
         
-        train_data, validate_data = self.dataset_separate_validate(self.train_data)
-        train_data = cell(target_list,label_setup,train_data)
-        validate_data = cell(target_list,label_setup,validate_data)
+        train_data = cell(target_list,label_setup,self.train_data)
+        validate_data = cell(target_list,label_setup,self.validate_data)
         test_data = cell(target_list,label_setup,self.test_data)
-        
-        #train_data = self.dataset_select_bylabel(train_data,target_list) if target_list is not None else train_data
-        #train_data = self.dataset_change_label(train_data,label_setup) if label_setup is not None else train_data
-        
-        #validate_data = self.dataset_select_bylabel(validate_data,target_list) if target_list is not None else validate_data
-        #validate_data = self.dataset_change_label(validate_data,label_setup) if label_setup is not None else validate_data
-        
-        #test_data = self.dataset_select_bylabel(self.test_data,target_list) if target_list is not None else self.test_data
-        #test_data = self.dataset_change_label(test_data,label_setup) if label_setup is not None else test_data
         return train_data,test_data,validate_data
 

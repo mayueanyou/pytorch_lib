@@ -3,6 +3,19 @@ from pytorch_lib import*
 from python_lib import*
 from tqdm import tqdm
 
+class ClipTransform:
+    def __init__(self,model_sel) -> None:
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.available_models = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'RN50x64', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px']
+        self.model_name = self.available_models[model_sel]
+        _, self.preprocess = clip.load(self.model_name, self.device)
+
+    def __call__(self, pic):
+        pic = self.preprocess(pic)
+        return pic
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
 
 class ClipWrapper():
     def __init__(self,model_sel=5,classes=[''],base_text='') -> None:
@@ -14,7 +27,7 @@ class ClipWrapper():
         self.classes = classes
         #print(clip.available_models())
         self.base_text = base_text
-        #self.base_text = 'a photo of a'
+        print('base text: ' + self.base_text)
         self.generate_text_features()
     
     def generate_text_features(self):
