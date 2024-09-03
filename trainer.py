@@ -27,7 +27,7 @@ class Trainer():
         for batch, (X, y) in enumerate(self.train_dataloader):
             X, y = X.to(self.device), y.to(self.device)
 
-            pred,feature,loss = self.net.train(X,y,True)
+            pred,loss = self.net.train(X,y,True)
             print_loss(batch,loss)
     
     def test(self):

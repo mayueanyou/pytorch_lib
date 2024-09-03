@@ -106,15 +106,13 @@ class Net():
     
     def train(self,input_data,label,bp):
         self.net_setup()
-        #pred, feature = self.net(input_data)
         pred = self.net(input_data)
         loss = self.loss.calculate_loss(pred,label)
         if self.train_model and bp:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        feature = None
-        return pred,feature,loss
+        return pred,loss
     
     def evalue(self,dataloader):
         size = len(dataloader.dataset)
@@ -125,7 +123,6 @@ class Net():
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
-                #pred,feature = self.net(X)
                 pred = self.net(X)
                 test_loss += self.loss.calculate_loss(pred, y).item()
                 correct += self.loss.calculate_correct(pred,y)

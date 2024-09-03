@@ -3,7 +3,8 @@ from torch import nn
 import torch.nn.functional as F
 
 class Cnn(nn.Module):
-    def __init__(self,input_channel,output_channel,kernel_size,stride,pedding,activation_function=True,bias=True):
+    def __init__(self,input_channel,output_channel,kernel_size=3,stride=1,pedding=1,activation_function=True,bias=True):
+        super().__init__()
         layers = [nn.Conv2d(input_channel,output_channel,kernel_size,stride,pedding,bias=bias),nn.BatchNorm2d(output_channel,track_running_stats=True)]
         if activation_function: layers.append(nn.GELU())
         self.layers = nn.Sequential(*layers)
