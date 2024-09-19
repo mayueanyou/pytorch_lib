@@ -14,16 +14,20 @@ class Net():
         print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
+        self.loss = loss
+        
         self.net_str = inspect.getsource(type(self.net))
         self.net_name = type(self.net).__name__
+        self.loss_name = type(self.loss).__name__
         if postfix is not None: self.net_name = self.net_name + '(' + postfix + ')'
         #if postfix is not None: self.net.name = self.net.name + '_' + postfix
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
         print('module name: ',self.net_name)
         print(f'total parameters: {total_params:,}')
+        print(f'loss fn: {self.loss_name}')
 
-        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,'best_module': self.net_str,
+        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,'best_module': self.net_str, 'best_loss_fn':self.loss_name,
                            'best_validate_accuracy':0,'learning rate':0,'parameters':total_params}
         
         self.extra_info = {}
@@ -36,7 +40,6 @@ class Net():
 
         self.learning_rate = 0.001
         self.optimizer_select = optimizer
-        self.loss = loss
 
         self.load(load)
         if load:
@@ -55,6 +58,7 @@ class Net():
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
         print(f'total parameters: {self.basic_info["parameters"]:,}')
+        print(f'loss fn: {self.basic_info["best_loss_fn"]}')
         print(f'optimizer: {self.basic_info["optimizer"]}')
         print(f'best_module: \n{self.basic_info["best_module"]}\n')
         print(f'extra_info: \n{self.extra_info}\n')
@@ -78,10 +82,11 @@ class Net():
         self.basic_info["best_test_accuracy"] = test_accuracy
         self.basic_info["best_test_loss"] = test_loss
         self.basic_info["best_module"] = self.net_str
+        self.basic_info["best_loss_fn"] = self.loss_name
         self.save()
     
      #------------------------save&load------------------------
-        
+    
     def save(self):
         data = {'net':self.net.state_dict(),'basic_info':self.basic_info,'extra_info':self.extra_info}
         torch.save(data,self.model_path())
@@ -128,7 +133,7 @@ class Net():
                 correct += self.loss.calculate_correct(pred,y)
             test_loss /= num_batches
             correct /= size
-            return correct > self.basic_info['best_validate_accuracy'], correct, test_loss
+            return correct >= self.basic_info['best_validate_accuracy'], correct, test_loss
     
     def get_confusion_matrix(self,dataloader:torch.utils.data.DataLoader, classes:{},path:str,name:str=''):
         self.net.eval()

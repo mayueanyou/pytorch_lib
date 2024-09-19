@@ -6,7 +6,7 @@ from torchvision import datasets,transforms
 
 
 class CustomDataset(Dataset):
-    def __init__(self, data, targets, normalize = False,data_transform=None,target_transform=None):
+    def __init__(self, data:torch.tensor, targets, normalize = False,data_transform=None,target_transform=None):
         self.data = data
         self.targets = targets
         if normalize: self.normalize()
@@ -25,9 +25,9 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        if self.data_transform is not None: self.data[index] = self.data_transform(self.data[index])
-        if self.target_transform is not None: self.targets[index] = self.target_transform(self.targets[index])
-        return self.data[index], self.targets[index]
+        data = self.data[index] if self.data_transform is None else self.data_transform(self.data[index])
+        target = self.targets[index] if self.target_transform is None else self.target_transform(self.targets[index])
+        return data, target
 
 class CustomDatasetLoader:
     def __init__(self,train_data,test_data,validate_data,target_list=None,label_setup=None,batch_size=64) -> None:
@@ -43,7 +43,7 @@ class CustomDatasetLoader:
         return train_dataloader,test_dataloader,validate_dataloader
 
 class DatasetLoader():
-    def __init__(self,train_data,test_data,validate_data=None) -> None:
+    def __init__(self,train_data:Dataset,test_data,validate_data=None) -> None:
         self.validate_rate = 0.2
         self.train_data = train_data
         if not torch.is_tensor(self.train_data.targets): self.train_data.targets = torch.tensor(self.train_data.targets)

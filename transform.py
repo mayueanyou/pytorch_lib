@@ -2,10 +2,63 @@ import os,sys,copy,torch,random,cv2,torchvision
 from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
+from abc import ABC,abstractmethod
+
+class Transform:
+    def __init__(self) -> None:
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    @abstractmethod
+    def __call__(self) -> None:pass
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+class SoftmaxTF(Transform):
+    def __init__(self,dim) -> None:
+        super().__init__()
+        self.dim = dim
+
+    def __call__(self, x):
+        x = x.softmax(self.dim)
+        return x
+
+class ScaleTF(Transform):
+    def __init__(self,scale_tensor) -> None:
+        super().__init__()
+        self.scale_tensor = scale_tensor
+
+    def __call__(self, x):
+        x *= self.scale_tensor
+        return x
+
+class RandMixTF(Transform):
+    def __init__(self,file_path,ex_rate=1,softmax=True) -> None:
+        super().__init__()
+        self.mix_tensor = torch.load(file_path)
+        self.ex_rate = ex_rate
+        self.softmax = softmax
+
+    def __call__(self, x):
+        extend_feature = x @ self.mix_tensor.T
+        if self.softmax: extend_feature = extend_feature.softmax(-1)
+        extend_feature *= self.ex_rate
+        x = torch.cat((x,extend_feature))
+        return x
+
+class Slice(Transform):
+    def __init__(self,idx_range) -> None:
+        super().__init__()
+        self.idx_range = idx_range
+
+    def __call__(self, x):
+        x = x[..., self.idx_range[0]:self.idx_range[1]]
+        return x
 
 
-class To_Tensor_Noise:
+class To_Tensor_Noise(Transform):
     def __init__(self,shape) -> None:
+        super().__init__()
         self.shape = shape
 
     def __call__(self, pic):
@@ -13,46 +66,38 @@ class To_Tensor_Noise:
         pic += torch.randn(self.shape[0], self.shape[1], self.shape[2])*0.1
         return pic
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-
-class RGB_Add_Gray:
+class RGB_Add_Gray(Transform):
     def __init__(self) -> None:
-        pass
+        super().__init__()
 
     def __call__(self, pic):
         pic = TF.to_tensor(pic)
         gray_pic = TF.rgb_to_grayscale(pic)
         return torch.cat((pic,gray_pic))
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
 
-class PermuteChannle:
+class PermuteChannle(Transform):
     def __init__(self,order) -> None:
+        super().__init__()
         self.order = order
 
     def __call__(self, data):
         data = data.permute(self.order)
         return data
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
 
-class PermuteColor:
+class PermuteColor(Transform):
     def __init__(self,order) -> None:
+        super().__init__()
         self.order = order
 
     def __call__(self, data):
         data = data[self.order,:]
         return data
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-
-class RGB_Extension:
+class RGB_Extension(Transform):
     def __init__(self) -> None:
-        pass
+        super().__init__()
 
     def __call__(self, pic):
         self.pic = TF.to_tensor(pic)
@@ -66,12 +111,10 @@ class RGB_Extension:
         new_color = torch.sum(NNF.conv2d(self.pic, weights,groups=3),dim=0)[None,:]
         return torch.cat((new_pic,new_color),dim=0)
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
 
-class Gray_Add_Color:
+class Gray_Add_Color(Transform):
     def __init__(self) -> None:
-        self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        super().__init__()
         idx_list = []
         self.color_range = 3
         for i in range(self.color_range):
@@ -98,6 +141,3 @@ class Gray_Add_Color:
         idx = torch.count_nonzero(idx==3,dim=1)
         colors = idx/idx.sum()
         return colors
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"

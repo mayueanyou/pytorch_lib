@@ -2,10 +2,21 @@ import os,sys,torch
 from torch import nn
 import torch.nn.functional as F
 from pytorch_lib.utility import SimilarityCalculator
+from abc import ABC,abstractmethod
 
-class SelfContrastiveLoss():
-    def __init__(self,mode_sel=0) -> None:
+class Criterion(ABC):
+    def __init__(self) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        
+    @abstractmethod
+    def calculate_correct(self):pass
+    
+    @abstractmethod
+    def calculate_loss(self):pass
+
+class SelfContrastiveLoss(Criterion):
+    def __init__(self,mode_sel=0) -> None:
+        super().__init__()
         self.mode_list = ['L1','L2','Mul']
         self.mode = self.mode_list[mode_sel]
         self.similarity_calculator = SimilarityCalculator(topk=2)
@@ -13,22 +24,42 @@ class SelfContrastiveLoss():
         
     def calculate_correct(self,pred,label):
         pred = pred.detach()
-        if self.mode == 'L1': values, indices = self.similarity_calculator.l1(pred,pred)
-        if self.mode == 'L2': values, indices = self.similarity_calculator.l2(pred,pred)
-        if self.mode == 'Mul': values, indices = self.similarity_calculator.mul(pred,pred)
+        values, indices = self.similarity_calculator(pred,pred,dis_func=self.mode)
         indices = indices[:,1]
         indices = torch.flatten(indices)
         pred_result = label[indices]
         return torch.eq(label.to(self.device),pred_result.to(self.device)).sum().item()
     
     def calculate_loss(self,pred,label):
-        label_pair = label[label]
-        label_new = torch.where(label==label_pair,1,-1)
-        return self.loss_fn(pred,pred,label_new)
+        label_1 = label.repeat(len(label))
+        pred_1 = pred.repeat(len(label),1)
+        label_2 = label.repeat(len(label),1).T.flatten()
+        pred_2 = pred.repeat(1,len(label))
+        pred_2 = pred_2.view(-1,pred.shape[-1])
+        label_new = torch.where(label_1==label_2,1,-1)
+        return self.loss_fn(pred_1,pred_2,label_new)
 
-class ContrastiveLoss():
+class CELoss_SelfContrastiveLoss(Criterion):
+    def __init__(self,rate=0.9) -> None:
+        super().__init__()
+        self.ce_loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+        self.em_loss = SelfContrastiveLoss()
+        self.rate_ce = rate
+        self.rate_em = 1-rate
+        
+    def calculate_correct(self,pred,label):
+        pred_1,pred_2 = pred
+        pred_1 = F.softmax(pred_1,dim=1)
+        return (pred_1.argmax(1) == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        pred_1,pred_2 = pred
+        loss = self.ce_loss_fn(pred_1,label) * self.rate_ce + self.em_loss.calculate_loss(pred_2,label) * self.rate_em
+        return loss
+
+class ContrastiveLoss(Criterion):
     def __init__(self,mode_sel=0) -> None:
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        super().__init__()
         self.mode_list = ['L1','L2','Mul']
         self.mode = self.mode_list[mode_sel]
         self.similarity_calculator = SimilarityCalculator(topk=1)
@@ -38,9 +69,7 @@ class ContrastiveLoss():
     def calculate_correct(self,pred,label):
         pred_1,pred_2 = pred
         pred_1,pred_2 = pred_1.detach(),pred_2.detach()
-        if self.mode == 'L1': values, indices = self.similarity_calculator.l1(pred_1,pred_2)
-        if self.mode == 'L2': values, indices = self.similarity_calculator.l2(pred_1,pred_2)
-        if self.mode == 'Mul': values, indices = self.similarity_calculator.mul(pred_1,pred_2)
+        values, indices = self.similarity_calculator(pred_1,pred_2,dis_func=self.mode)
         indices = torch.flatten(indices)
         label_new =  torch.arange(0, len(indices), 1).to(torch.long)
         return torch.eq(indices.to(self.device),label_new.to(self.device)).sum().item()
@@ -51,9 +80,32 @@ class ContrastiveLoss():
         loss_fn_all = self.loss_fn_1(pred_1,pred_2,label_new) + self.loss_fn_2(pred_2,pred_1,label_new)
         return loss_fn_all
 
-class ClipLoss():
+class ContrastiveClsLoss(Criterion):
+    def __init__(self,mode_sel=0) -> None:
+        super().__init__()
+        self.mode_list = ['L1','L2','Mul']
+        self.mode = self.mode_list[mode_sel]
+        self.similarity_calculator = SimilarityCalculator(topk=2)
+        self.loss_fn_1 = nn.CosineEmbeddingLoss()
+        self.loss_fn_2 = nn.CosineEmbeddingLoss()
+        
+    def calculate_correct(self,pred,label):
+        pred_1,pred_2 = pred
+        pred_1,pred_2 = pred_1.detach(),pred_2.detach()
+        values, indices = self.similarity_calculator(pred_1,pred_2,dis_func=self.mode)
+        indices = torch.flatten(indices)
+        label_new =  torch.arange(0, len(indices), 1).to(torch.long)
+        return torch.eq(indices.to(self.device),label_new.to(self.device)).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        pred_1,pred_2 = pred
+        label_new = torch.ones(len(pred_1))
+        loss_fn_all = self.loss_fn_1(pred_1,pred_2,label_new) + self.loss_fn_2(pred_2,pred_1,label_new)
+        return loss_fn_all
+
+class ClipLoss(Criterion):
     def __init__(self,text_features) -> None:
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        super().__init__()
         self.text_features = text_features
         self.text_features /= self.text_features.norm(dim=-1, keepdim=True)
         self.loss_fn_text = nn.CrossEntropyLoss(label_smoothing=0)
@@ -74,7 +126,7 @@ class ClipLoss():
         return self.loss_fn(torch.tensor([0]),torch.tensor([0]))
         return self.loss_fn(pred,label)
 
-class CosEmLoss():
+class CosEmLoss(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.CosineEmbeddingLoss()
         
@@ -88,7 +140,7 @@ class CosEmLoss():
         pred_1,pred_2 = pred
         return self.loss_fn(pred_1,pred_2,label)
 
-class CELoss():
+class CELoss(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
         
@@ -99,7 +151,7 @@ class CELoss():
     def calculate_loss(self,pred,label):
         return self.loss_fn(pred,label)
 
-class MSELoss():
+class MSELoss(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.MSELoss()
     
@@ -111,7 +163,7 @@ class MSELoss():
     def calculate_loss(self,pred,label):
         return self.loss_fn(pred,label)     
 
-class MSELoss_Binary():
+class MSELoss_Binary(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.MSELoss()
         self.threshold = 0.5

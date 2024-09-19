@@ -95,3 +95,12 @@ class ClipWrapper():
         validate_data = convert_one(dataset['validate'])
         data = {'train':train_data,'test':test_data,'validate':validate_data}
         torch.save(data,path + f'/{name}_clip_{self.model_name.replace("/","_")}.pt')
+
+
+if __name__ == '__main__':
+    cw = ClipWrapper()
+    #test = clip.tokenize('ff adsf fdas')
+    image = torch.rand((3,224,224))
+    image = cw.preprocess(image)
+    cw.generate_img_features(image)
+    

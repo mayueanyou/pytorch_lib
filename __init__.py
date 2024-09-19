@@ -9,3 +9,6 @@ from .vision_language import*
 from .inferencer import*
 from .pretrained_model import*
 from .utility import*
+
+import torch
+device = "cuda" if torch.cuda.is_available() else "cpu"
