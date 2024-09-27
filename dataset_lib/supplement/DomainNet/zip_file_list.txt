@@ -1,0 +1,6 @@
+/download/clipart.zip https://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/clipart.zip
+/download/infograph.zip https://csr.bu.edu/ftp/visda/2019/multi-source/infograph.zip
+/download/painting.zip https://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/painting.zip
+/download/quickdraw.zip https://csr.bu.edu/ftp/visda/2019/multi-source/quickdraw.zip
+/download/real.zip https://csr.bu.edu/ftp/visda/2019/multi-source/real.zip
+/download/sketch.zip https://csr.bu.edu/ftp/visda/2019/multi-source/sketch.zip

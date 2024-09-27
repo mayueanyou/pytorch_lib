@@ -1,0 +1,6 @@
+/download/clipart_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_train.txt'
+/download/infograph_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_train.txt'
+/download/painting_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_train.txt'
+/download/quickdraw_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_train.txt'
+/download/real_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_train.txt'
+/download/sketch_train.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_train.txt'

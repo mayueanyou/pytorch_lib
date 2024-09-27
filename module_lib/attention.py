@@ -39,13 +39,13 @@ class SelfAttentionFilter(nn.Module):
         self.out = nn.Linear(dim, dim) if linear_projection['o'] else None
         self.attention = nn.Parameter(torch.randn(channle_out,channle_in))
     
-    def forward(self,x):
+    def forward(self,x): #[batch,channle_in,dim]
         x = self.value(x) if self.value is not None else x
         attention = self.attention.softmax(dim=-1)
         attention = attention.expand(x.shape[0],-1,-1)
         out = torch.einsum('bij,bjd->bid', attention, x)
         out = self.out(out) if self.out is not None else out
-        return out
+        return out #[batch,channle_out,dim]
 
 class SelfAttention(nn.Module):
     def __init__(self, dim, heads=1,increase_dim=False,linear_projection={'q':True,'k':True,'v':True,'o':True}):

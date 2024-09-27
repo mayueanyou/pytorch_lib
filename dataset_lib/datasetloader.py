@@ -1,9 +1,15 @@
 import os,sys,copy,torch,random,cv2,torchvision,json
-from torch.utils.data import Dataset,DataLoader
+from torch.utils.data import Dataset,DataLoader,random_split
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
 from torchvision import datasets,transforms
 
+
+def get_classes_from_file(path):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + path, 'r') as file: classes_original = json.loads(file.read())
+        classes = list(classes_original.values())
+        return classes
 
 class CustomDataset(Dataset):
     def __init__(self, data:torch.tensor, targets, normalize = False,data_transform=None,target_transform=None):
@@ -41,8 +47,81 @@ class CustomDatasetLoader:
         test_dataloader = DataLoader(self.test_data, batch_size = self.batch_size)
         validate_dataloader = DataLoader(self.validate_data, batch_size = self.batch_size)
         return train_dataloader,test_dataloader,validate_dataloader
+    
+class DatasetWrapper:
+    def __init__(self,dataset) -> None:
+        self.dataset = dataset
+        self.dataset_out = copy.deepcopy(self.dataset)
+        self.length = len(dataset)
+        if not torch.is_tensor(self.dataset.targets): self.dataset.targets = torch.tensor(self.dataset.targets)
+    
+    def select_bylabel(self,target_list):
+        idx = sum(self.dataset.targets==i for i in target_list).bool()
+        self.dataset_out.data = self.dataset.data[idx]
+        self.dataset_out.targets = self.dataset.targets[idx]
+    
+    def change_label(self,label_setup):
+        for setup in label_setup:
+            idx = sum(self.dataset.targets==i for i in setup[0]).bool()
+            self.dataset_out.targets[idx] = setup[1]
+    
+    def split(self,rate):
+        split_number = int(self.length*rate)
+        random_indices = torch.randperm(self.length)
+        part_1 = copy.deepcopy(self.dataset)
+        part_1.data = part_1.data[random_indices[split_number:]]
+        part_1.targets = part_1.targets[random_indices[split_number:]]
+        part_2 = copy.deepcopy(self.dataset)
+        part_2.data = part_2.data[random_indices[:split_number]]
+        part_2.targets = part_2.targets[random_indices[:split_number]]
+        return DatasetWrapper(part_1),DatasetWrapper(part_2)
+    
+    def transform(self,target_list=None,label_setup=None):
+        self.dataset_out = copy.deepcopy(self.dataset)
+        if target_list is not None: self.select_bylabel(target_list)
+        if label_setup is not None: self.change_label(label_setup)
+    
+    def __call__(self,batch_size=64):
+        return DataLoader(self.dataset_out, batch_size = batch_size)
 
 class DatasetLoader():
+    def __init__(self,train_data,test_data=None,validate_data=None,generate_validate=True,validate_rate=0.2) -> None:
+        self.validate_rate = validate_rate
+        self.train_data = DatasetWrapper(train_data) if train_data is not None else None
+        self.test_data = DatasetWrapper(test_data) if test_data is not None else None
+        self.validate_data = DatasetWrapper(validate_data) if validate_data is not None else None
+        if validate_data is None and generate_validate:self.train_data,self.validate_data =  self.train_data.split(self.validate_rate)
+        print()
+    
+    def print_info(self,train,test,validate,batch_size):
+        print(f'batch size: {batch_size}')
+        batch_size = abs(batch_size)
+        print(f'data in total:  train[{train.length}] test[{test.length}] validate[{validate.length}]')
+        print(f'batchs in total: train[{train.length//batch_size}] test[{test.length//batch_size}] validate[{validate.length//batch_size}]\n')
+    
+    def get_datas(self,target_list=None,label_setup=None):
+        self.dataset_reset(target_list,label_setup)
+        return self.train_data.dataset_out, self.test_data.dataset_out, self.validate_data.dataset_out
+    
+    def get_loaders(self,target_list=None,label_setup=None,batch_size = 64):
+        self.dataset_reset(target_list,label_setup)
+        self.print_info(self.train_data, self.test_data, self.validate_data,batch_size)
+        if batch_size == -1:
+            train_dataloader = self.train_data(self.train_data.length)
+            test_dataloader = self.test_data(self.test_data.length)
+            validate_dataloader = self.validate_data(self.validate_data.length)
+        else:
+            train_dataloader = self.train_data(batch_size)
+            test_dataloader = self.test_data(batch_size)
+            validate_dataloader = self.validate_data(batch_size)
+        return train_dataloader,test_dataloader,validate_dataloader
+    
+    def dataset_reset(self,target_list=None,label_setup=None):
+        if self.train_data is not None: self.train_data.transform(target_list=target_list,label_setup=label_setup)
+        if self.test_data is not None: self.test_data.transform(target_list=target_list,label_setup=label_setup)
+        if self.validate_data is not None: self.validate_data.transform(target_list=target_list,label_setup=label_setup)
+
+class DatasetLoader_old():
     def __init__(self,train_data:Dataset,test_data,validate_data=None) -> None:
         self.validate_rate = 0.2
         self.train_data = train_data

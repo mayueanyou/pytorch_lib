@@ -66,16 +66,16 @@ class ClipWrapper():
             print(f"{self.classes[index]:>16s}: {100 * value.item():.2f}%")
     
     def eval_dataset(self,dataset):
-        batch = 0
-        acc = 0
+        acc,nums = 0,0
         for images, labels in tqdm(dataset):
             values, indices = self.get_predictions(images)
             indices = torch.flatten(indices)
             result = torch.eq(labels.to(self.device),indices.to(self.device))
-            acc += torch.sum(result)/len(labels)
-            batch += 1
-        acc /= batch
+            acc += torch.sum(result)
+            nums += len(labels)
+        acc = acc.to(torch.float) / nums
         print(acc)
+        return acc
     
     def convert_dataset(self,dataset,name,path):
         def convert_one(dataset):
@@ -95,6 +95,17 @@ class ClipWrapper():
         validate_data = convert_one(dataset['validate'])
         data = {'train':train_data,'test':test_data,'validate':validate_data}
         torch.save(data,path + f'/{name}_clip_{self.model_name.replace("/","_")}.pt')
+    
+    def inference_dataset(self,dataset):
+        data  = {'data':[],'targets':[]}
+        for images, labels in tqdm(dataset):
+            img_features = self.generate_img_features(images)
+            
+            data['data'].append(img_features.cpu().type(torch.float))
+            data['targets'].append(labels.cpu().type(torch.long))
+        data['data'] = torch.cat(data['data'],0)
+        data['targets'] = torch.cat(data['targets'],0)
+        return data
 
 
 if __name__ == '__main__':

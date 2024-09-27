@@ -6,6 +6,7 @@ from abc import ABC,abstractmethod
 
 class Criterion(ABC):
     def __init__(self) -> None:
+        super().__init__()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
     @abstractmethod
@@ -38,6 +39,23 @@ class SelfContrastiveLoss(Criterion):
         pred_2 = pred_2.view(-1,pred.shape[-1])
         label_new = torch.where(label_1==label_2,1,-1)
         return self.loss_fn(pred_1,pred_2,label_new)
+
+class CE_SimilarityLoss(Criterion):
+    def __init__(self,target_tensor,dis_func='L2') -> None: 
+        super().__init__()
+        self.dis_func = dis_func
+        self.target_tensor = target_tensor.to(self.device)
+        self.similarity_calculator = SimilarityCalculator(topk=1)
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    
+    def calculate_correct(self,pred,label):
+        values, indices, similarity = self.similarity_calculator(self.target_tensor,pred,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        return (indices == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        values, indices, similarity = self.similarity_calculator(self.target_tensor,pred,dis_func="L2")
+        return self.loss_fn(similarity,label)
 
 class CELoss_SelfContrastiveLoss(Criterion):
     def __init__(self,rate=0.9) -> None:

@@ -7,7 +7,7 @@ class SimilarityCalculator():
         self.use_cdist = use_cdist
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
-    def __call__(self,label_features,input_features,dis_func='L1'):
+    def __call__(self,label_features,input_features,dis_func='L1'): #[n,d], [x,d]
         label_features = label_features.to(self.device)
         input_features = input_features.to(self.device)
         if dis_func=='L1': return self.l1(label_features,input_features)
@@ -19,7 +19,7 @@ class SimilarityCalculator():
     def topk_similarity(self,similarity):
         similarity = similarity.softmax(dim=-1)
         values, indices = similarity.topk(self.topk)
-        return values, indices
+        return values, indices, similarity
     
     def p_norm(self,label_features,input_features,p):
         similarity = torch.cdist(input_features,label_features,p=p)

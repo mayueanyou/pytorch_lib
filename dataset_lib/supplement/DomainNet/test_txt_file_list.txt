@@ -1,0 +1,6 @@
+/download/clipart_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_test.txt
+/download/infograph_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_test.txt
+/download/painting_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_test.txt
+/download/quickdraw_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_test.txt
+/download/real_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_test.txt
+/download/sketch_test.txt https://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_test.txt
