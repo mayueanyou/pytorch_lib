@@ -21,9 +21,9 @@ def main(name):
     tf = ToTensor()
     dataset = pl.CIFAR10(dataset_path,batch_size=128,training_transform=tf,test_transform=tf)
     training_data,test_data,validate_data = dataset.loaders()
-    net = pl.Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/',loss=CELoss())
+    net = pl.Net(net = getattr(sys.modules[__name__], name)(),load = False,model_folder_path=current_path+'/model/',loss=pl.CELoss())
     trainer = pl.Trainer(net,training_data,test_data,validate_data)
-    trainer.train_test(200)
+    trainer.train_test(100)
 
 
 if __name__ == '__main__':

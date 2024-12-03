@@ -25,6 +25,7 @@ class VisionLanguage:
     
     def eval_img_dataset_with_label(self,text_features,test_label,dataset,dis_func='L1'):
         acc,num_data = 0,0
+        test_label = test_label.to(self.device)
         for image_features, labels in tqdm(dataset):
             values, indices, similarity = self.similarity_calculator(text_features,image_features,dis_func=dis_func)
             indices = torch.flatten(indices)

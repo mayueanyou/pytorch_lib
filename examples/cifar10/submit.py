@@ -5,10 +5,12 @@ current_path =  os.path.abspath(os.path.dirname(file_path) + os.path.sep + ".")
 from pytorch_lib import*
 from condor_src import*
 
-def submit_wrap(folder,argument):
-    py_file = current_path + '/main.py'
-    base_path = '/condor/'
-    condor_submit(current_path + base_path + folder , py_file, argument,'py3.10','&&(Machine != "SURGE-OG-10-5-141-225")')
+def submit_wrap(sub_path,py_arguments):
+    cc = CondorController(base_path = current_path + '/condor/', 
+                         py_file = current_path + '/main.py',
+                         condor_version='py3.10',
+                         extra_requirements = '&&(Machine != "SURGE-OG-10-5-141-225")&&(Machine != "SURGE-OG-10-5-137-119")&&(Machine != "SURGE-OG-10-5-141-224")') #&&(Machine != "SURGE-OG-10-5-136-229")
+    cc.submit(sub_path = sub_path, py_arguments = py_arguments)
     
 def exp1():
     #condor_submit(current_path + base_path + 'ResNet_original' , py_file, '-f main -net ResNet_original','py3.10')
@@ -48,7 +50,10 @@ def exp1():
     #submit_wrap('Att_1','-f main -net Att')
     #submit_wrap('Att_1_tttt,ft','-f main -net Att')
     #submit_wrap('Vit_p32','-f main -net Vit_p32')
-    submit_wrap('MlpMixter','-f main -net MlpMixter')
+    #submit_wrap('MlpMixter','-f main -net MlpMixter')
+    #submit_wrap('FNN1','-f main -net FNN1')
+    #submit_wrap('pool1','-f main -net pool1')
+    submit_wrap('pool1/new','-f main -net pool1')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

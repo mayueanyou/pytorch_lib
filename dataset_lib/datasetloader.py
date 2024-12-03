@@ -15,9 +15,8 @@ class CustomDataset(Dataset):
     def __init__(self, data:torch.tensor, targets, normalize = False,data_transform=None,target_transform=None):
         self.data = data
         self.targets = targets
+        if len(self.data) != len(self.targets):print(f'data:{len(self.data)},targets:{len(self.targets)} not match!')
         if normalize: self.normalize()
-        self.data_shape = data.shape
-        self.targets_shape = targets.shape
         self.data_transform = data_transform
         self.target_transform = target_transform
         #print(f'data shape: {self.data_shape}')
@@ -27,8 +26,7 @@ class CustomDataset(Dataset):
         self.data = torch.div(self.data, torch.max(self.data,dim=0).values)
         self.targets = torch.div(self.targets, torch.max(self.targets,dim=0).values)    
 
-    def __len__(self):
-        return len(self.data)
+    def __len__(self): return len(self.data)
 
     def __getitem__(self, index):
         data = self.data[index] if self.data_transform is None else self.data_transform(self.data[index])
@@ -50,39 +48,57 @@ class CustomDatasetLoader:
     
 class DatasetWrapper:
     def __init__(self,dataset) -> None:
-        self.dataset = dataset
+        self.dataset = copy.deepcopy(dataset)
         self.dataset_out = copy.deepcopy(self.dataset)
-        self.length = len(dataset)
+        self.length_original = len(dataset)
+        self.length_out = len(self.dataset_out)
         if not torch.is_tensor(self.dataset.targets): self.dataset.targets = torch.tensor(self.dataset.targets)
     
+    def __len__(self): return len(self.dataset_out)
+    
+    def reset(self): self.dataset_out = copy.deepcopy(self.dataset)
+    
+    def get_sample(self,idx=0):
+        targets_set = set(self.dataset_out.targets.tolist())
+        data_list = []
+        for i in range(len(targets_set)):
+            idx = self.dataset_out.targets==i
+            data_list.append()
+    
     def select_bylabel(self,target_list):
-        idx = sum(self.dataset.targets==i for i in target_list).bool()
-        self.dataset_out.data = self.dataset.data[idx]
-        self.dataset_out.targets = self.dataset.targets[idx]
+        idx = sum(self.dataset_out.targets==i for i in target_list).bool()
+        self.dataset_out.data = self.dataset_out.data[idx]
+        self.dataset_out.targets = self.dataset_out.targets[idx]
+        print(f'select label:\n {target_list}')
     
     def change_label(self,label_setup):
         for setup in label_setup:
-            idx = sum(self.dataset.targets==i for i in setup[0]).bool()
+            idx = sum(self.dataset_out.targets==i for i in setup[0]).bool()
             self.dataset_out.targets[idx] = setup[1]
+        print('change label:')
+        for it in label_setup: print(f'{it[0]} -> {it[1]}')
     
-    def split(self,rate):
-        split_number = int(self.length*rate)
-        random_indices = torch.randperm(self.length)
+    def split(self,rate=0.2):
+        split_number = int(self.length_original*rate)
+        random_indices = torch.randperm(self.length_original)
         part_1 = copy.deepcopy(self.dataset)
         part_1.data = part_1.data[random_indices[split_number:]]
         part_1.targets = part_1.targets[random_indices[split_number:]]
         part_2 = copy.deepcopy(self.dataset)
         part_2.data = part_2.data[random_indices[:split_number]]
         part_2.targets = part_2.targets[random_indices[:split_number]]
+        print(f'split: part_1[{len(part_1)}] part_2[{len(part_2)}]')
         return DatasetWrapper(part_1),DatasetWrapper(part_2)
     
     def transform(self,target_list=None,label_setup=None):
+        self.reset()
         self.dataset_out = copy.deepcopy(self.dataset)
         if target_list is not None: self.select_bylabel(target_list)
         if label_setup is not None: self.change_label(label_setup)
+        self.length_out = len(self.dataset_out)
     
-    def __call__(self,batch_size=64):
-        return DataLoader(self.dataset_out, batch_size = batch_size)
+    def __call__(self,batch_size=64,shuffle=False):
+        return DataLoader(self.dataset_out, batch_size = batch_size,shuffle=shuffle)
 
 class DatasetLoader():
     def __init__(self,train_data,test_data=None,validate_data=None,generate_validate=True,validate_rate=0.2) -> None:
@@ -91,13 +107,12 @@ class DatasetLoader():
         self.test_data = DatasetWrapper(test_data) if test_data is not None else None
         self.validate_data = DatasetWrapper(validate_data) if validate_data is not None else None
         if validate_data is None and generate_validate:self.train_data,self.validate_data =  self.train_data.split(self.validate_rate)
-        print()
     
     def print_info(self,train,test,validate,batch_size):
         print(f'batch size: {batch_size}')
         batch_size = abs(batch_size)
-        print(f'data in total:  train[{train.length}] test[{test.length}] validate[{validate.length}]')
-        print(f'batchs in total: train[{train.length//batch_size}] test[{test.length//batch_size}] validate[{validate.length//batch_size}]\n')
+        print(f'data in total:  train[{len(train)}] test[{len(test)}] validate[{len(validate)}]')
+        print(f'batchs in total: train[{len(train)//batch_size}] test[{len(test)//batch_size}] validate[{len(validate)//batch_size}]\n')
     
     def get_datas(self,target_list=None,label_setup=None):
         self.dataset_reset(target_list,label_setup)

@@ -16,6 +16,20 @@ class SimilarityCalculator():
         elif dis_func=='Cos': return self.cos(label_features,input_features)
         else: return self.p_norm(label_features,input_features,dis_func)
     
+    def select_from_label_one(self,label_features,input_features,dis_func='L1'):
+        indice_list = []
+        for i in range(len(input_features)):
+            data = input_features[i].unsqueeze(0)
+            values, indices, similarity = self(label_features,data,dis_func=dis_func)
+            indice_list.append(indices)
+        indice_list = torch.cat((indice_list))
+        return label_features[indice_list]
+    
+    def select_from_label(self,label_features,input_features,dis_func='L1'):
+        values, indices, similarity = self(label_features,input_features,dis_func=dis_func)
+        print(indices.shape)
+        return label_features[indices]
+    
     def topk_similarity(self,similarity):
         similarity = similarity.softmax(dim=-1)
         values, indices = similarity.topk(self.topk)

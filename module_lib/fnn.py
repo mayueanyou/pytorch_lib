@@ -4,6 +4,7 @@ from . import*
 
 class Fnn(nn.Module):
     def __init__(self,dim_in,dim_hidden,dim_out):
+        super().__init__()
         layers = [nn.Linear(dim_in,dim_hidden),nn.GELU(),nn.Linear(dim_hidden,dim_out)]
         self.layers = nn.Sequential(*layers)
     

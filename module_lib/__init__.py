@@ -4,3 +4,4 @@ from .residual import*
 from .attention import*
 from .vit import*
 from .mlp_mixer import*
+from .pool import*

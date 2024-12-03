@@ -2,6 +2,7 @@ import os,sys,copy,torch,random,cv2,torchvision
 from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
+from PIL import Image
 from abc import ABC,abstractmethod
 
 class Transform:
@@ -13,6 +14,35 @@ class Transform:
     
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
+
+class ImgUpscaleTF(Transform):
+    def __init__(self,times=2) -> None:
+        super().__init__()
+        self.times = times
+
+class ImgRepeatTF(Transform):
+    def __init__(self,times=2) -> None:
+        super().__init__()
+        self.times = times
+    
+    def repeat_image(self, image, times_x, times_y):
+        """Repeats an image horizontally and vertically."""
+
+        width, height = image.size
+        new_width = width * times_x
+        new_height = height * times_y
+
+        new_image = Image.new('RGB', (new_width, new_height))
+
+        for x in range(times_x):
+            for y in range(times_y):
+                new_image.paste(image, (x * width, y * height))
+
+        return new_image
+    
+    def __call__(self, x):
+        x = self.repeat_image(x, self.times, self.times)
+        return x
 
 class SoftmaxTF(Transform):
     def __init__(self,dim) -> None:

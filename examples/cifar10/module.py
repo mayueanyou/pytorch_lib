@@ -2,7 +2,41 @@ import os,sys,torch,einops,inspect
 from torch import nn
 import torch.nn.functional as F
 from einops import rearrange
-from pytorch_lib import*
+import pytorch_lib as pl
+
+
+class FNN1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fnn1 = nn.Linear(32*32*3,512)
+        self.cls = nn.Linear(512,10)
+    
+    def forward(self,x):
+        x = x.view(-1, 32*32*3)
+        x = self.fnn1(x)
+        x = self.cls(x)
+        return x
+
+class pool1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fnn1 = nn.Linear(32*32*3,512)
+        self.pool1 = pl.Pool(512,10,1)
+        #self.pool2 = pl.Pool(512,10,3)
+        #self.pool3 = pl.Pool(512,10,3)
+        self.cls = nn.Linear(512,10)
+    
+    def forward(self,x):
+        x = x.view(-1, 32*32*3)
+        x = self.fnn1(x)
+        x = self.pool1(x)
+        x = x.squeeze(1)
+        #print(x.shape)
+        #input()
+        #x = self.pool2(x)
+        #x = self.pool3(x)
+        x = self.cls(x)
+        return x
 
 class ResNet_original(nn.Module):
     def __init__(self,in_channel=3,class_number=10):

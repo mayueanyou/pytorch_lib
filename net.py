@@ -6,10 +6,11 @@ from sklearn.metrics import confusion_matrix
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class Net():
     def __init__(self,net:torch.nn.Module, load:bool, model_folder_path:str,
-                 postfix:str=None,optimizer:str='Adam',loss:str=None) -> None:
+                 postfix:str=None,optimizer:str='Adam',loss:str=None,lr=0.001) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
@@ -38,7 +39,7 @@ class Net():
         self.train_model = True
         self.save_model = True
 
-        self.learning_rate = 0.001
+        self.learning_rate = lr
         self.optimizer_select = optimizer
 
         self.load(load)
@@ -63,13 +64,19 @@ class Net():
         print(f'best_module: \n{self.basic_info["best_module"]}\n')
         print(f'extra_info: \n{self.extra_info}\n')
     
+    def get_parameters(self):
+        data_list = []
+        for parameter in self.net.parameters():
+            data_list.append(parameter)
+        return data_list
+    
     #------------------------update_function------------------------
     
     def update_loss_object(self,loss):
         self.loss = loss
    
     def update_optimizer(self):
-        if self.optimizer_select == 'SGD': self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=0.9)
+        if self.optimizer_select == 'SGD': self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=0.0)
         elif self.optimizer_select == 'Adam': self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate, weight_decay=0)
     
     def update_name(self,postfix,load):
@@ -152,4 +159,17 @@ class Net():
         plt.figure(figsize = (12,7))
         sn.heatmap(df_cm, annot=True)
         plt.savefig(f'{path}/cf_matrix{name}.png')
+    
+    def get_inference_data(self,dataloader):
+        data_list = []
+        label_list = []
+        with torch.no_grad():
+            for X, y in tqdm(dataloader):
+                X, y = X.to(self.device), y.to(self.device)
+                pred = self.net(X)
+                data_list.append(pred.detach().cpu())
+                label_list.append(y.detach().cpu())
+            data_list = torch.cat((data_list))
+            label_list = torch.cat((label_list))
+        return data_list,label_list
     

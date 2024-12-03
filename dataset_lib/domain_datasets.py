@@ -21,6 +21,8 @@ class OfficeHome:
         
         self.domain_list = ['Art','Clipart','Product','Real World']
         self.classes = get_classes_from_file(f'/supplement/{self.name}/classes.txt')
+        #self.classes = sorted(self.classes)
+        for i in range(len(self.classes)): self.classes[i] = self.classes[i].lower()
         
         self.datasets = []
         for domain_name in self.domain_list:
@@ -60,7 +62,9 @@ class DomainNet:
         
         self.domain_list = ['clipart','infograph','painting','quickdraw','real','sketch']
         self.classes_folders = get_classes_from_file(f'/supplement/{self.name}/classes.txt')
+        
         self.classes = [it.replace('_',' ') for it in self.classes_folders]
+        self.classes = sorted(self.classes)
         
         self.check_file(self.zip_file_list)
         self.check_file(self.train_txt_file_list)
@@ -112,6 +116,34 @@ class DomainNet:
             for file in self.test_txt_file_list: move_file(self.root + file[0],'/test')
             with open(self.root + '/splited', "w") as f:...
 
+class CORe50:
+    def __init__(self,root,data_transform=Compose([Resize((224,224)),ToTensor()])) -> None:
+        self.name = type(self).__name__
+        self.root = root
+        if not pathlib.Path(root).is_dir():
+            print(root,'is not exist')
+            return
+        self.train_domain_list = ['s1','s2','s4','s5','s6','s8','s9','s11']
+        self.test_domain_list = ['s3','s7','s10']
+        self.classes = ['plug adapters']*5 + ['mobile phones']*5 + ['scissors']*5 + ['light bulbs']*5 + ['cans']*5 + \
+                        ['glasses']*5 + ['balls']*5 + ['markers']*5 + ['cups']*5 + ['remote controls']*5 
+        #print( self.classes)
+        
+        self.train_datasets = []
+        self.test_datasets = []
+        for domain in self.train_domain_list:
+            self.train_datasets.append(datasets.ImageFolder(root = self.root + f'/{domain}',transform = data_transform))
+        
+        for domain_name in self.test_domain_list:
+            self.test_datasets.append(datasets.ImageFolder(root = self.root + f'/{domain_name}',transform = data_transform))
+        
+    def get_loaders(self,batch_size=64):
+        train_loaders,test_loaders = [],[]
+        for dataset in self.train_datasets: train_loaders.append(DataLoader(dataset, batch_size=batch_size, shuffle=False))
+        for dataset in self.test_datasets: test_loaders.append(DataLoader(dataset, batch_size=batch_size, shuffle=False))
+        return train_loaders,test_loaders
+
 if __name__ == "__main__":
-    dn = DomainNet('/home/yma183/datasets/DomainNet')
+    #dn = DomainNet('/home/yma183/datasets/DomainNet')
     #oh = OfficeHome('/home/yma183/datasets/OfficeHome')
+    co = CORe50('/home/yma183/datasets/CORe50/core50/data/core50_128x128')

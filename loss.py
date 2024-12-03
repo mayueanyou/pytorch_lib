@@ -15,6 +15,87 @@ class Criterion(ABC):
     @abstractmethod
     def calculate_loss(self):pass
 
+class IntegratorLoss_old(Criterion):
+    def __init__(self,dis_func = 'L1') -> None:
+        super().__init__()
+        self.dis_func = dis_func
+        self.similarity_calculator = SimilarityCalculator()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+   
+    def calculate_correct(self,pred,label):
+        text_image,x = pred
+        label -= torch.min(label)
+        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        return (indices == label).type(torch.float).sum().item()
+   
+    def calculate_loss(self,pred,label):
+        label -= torch.min(label)
+        text_image,x = pred
+        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        return self.loss_fn(similarity,label)
+
+class IntegratorLoss(Criterion):
+    def __init__(self,dis_func = 'L1',offset=0) -> None:
+        super().__init__()
+        self.dis_func = dis_func
+        self.offset = offset
+        self.similarity_calculator = SimilarityCalculator()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    
+    def calculate_correct(self,pred,label): 
+        text_image,x = pred
+        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        label -= self.offset
+        return (indices == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        text_image,x = pred
+        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        label -= self.offset
+        return self.loss_fn(similarity,label)
+
+class PromptClustering(Criterion):
+    def __init__(self,dis_func = 'L1') -> None:
+        super().__init__()
+        self.dis_func = dis_func
+        self.similarity_calculator = SimilarityCalculator()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    
+    def calculate_correct(self,pred,label): 
+        x,prompts = pred
+        values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        #loss = F.cross_entropy(similarity,indices)
+        #return 2 - loss
+        return (indices == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        x,prompts = pred
+        values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        return self.loss_fn(similarity,indices)
+
+class PromptTraining(Criterion):
+    def __init__(self,dis_func = 'L1') -> None:
+        super().__init__()
+        self.dis_func = dis_func
+        self.similarity_calculator = SimilarityCalculator()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    
+    def calculate_correct(self,pred,label): 
+        x,prompts = pred
+        values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        return (indices == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        x,prompts = pred
+        values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
+        return self.loss_fn(similarity,label)
+
 class SelfContrastiveLoss(Criterion):
     def __init__(self,mode_sel=0) -> None:
         super().__init__()
