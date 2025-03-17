@@ -41,8 +41,8 @@ class ResNet_18(nn.Module):
         self.layer2 = residual_cell(64, 128, 2, 2)
         self.layer3 = residual_cell(128, 256, 2, 2)
         self.layer4 = residual_cell(256, 512, 2, 2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc = nn.Linear(128, num_cls)
+        #self.avgpool = nn.AvgPool2d(7, stride=1)
+        self.fc = nn.Linear(512, num_cls)
 
     def forward(self,x):
         x = self.conv1(x)
@@ -51,7 +51,7 @@ class ResNet_18(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-        x = self.avgpool(x)
+        #x = self.avgpool(x)
         
         x = x.view(x.size(0), -1)
         logits = self.fc(x)

@@ -15,6 +15,29 @@ class Transform:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
+class FlattenTF(Transform):
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def __call__(self, x):
+        return torch.flatten(x)
+
+class ReadImageTF(Transform):
+    def __init__(self,mode='PIL') -> None:
+        super().__init__()
+        self.mode = mode
+    
+    def __call__(self, path):
+        if self.mode == 'PIL':
+            image = Image.open(path)
+            return image.convert("RGB")
+            #with open(path, "rb") as f: 
+            #    img = Image.open(f)
+            #    return img.convert("RGB")
+        elif self.mode == 'torch':
+            return torchvision.io.read_image(path, mode = 'RGB').to(torch.float32)
+            #return torchvision.io.decode_image(input=path,mode = 'RGB')
+
 class ImgUpscaleTF(Transform):
     def __init__(self,times=2) -> None:
         super().__init__()

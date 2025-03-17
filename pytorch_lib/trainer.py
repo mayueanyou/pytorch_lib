@@ -29,6 +29,8 @@ class Trainer():
 
             pred,loss = self.net.train(X,y,True)
             print_loss(batch,loss)
+        self.net.lr_scheduler.step()
+        print('current learning rate: ',self.net.lr_scheduler.get_last_lr())
     
     def test(self):
         def print_result(name,accuracy,loss=0):

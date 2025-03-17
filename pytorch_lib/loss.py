@@ -46,15 +46,62 @@ class IntegratorLoss(Criterion):
     
     def calculate_correct(self,pred,label): 
         text_image,x = pred
-        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
         indices = torch.flatten(indices)
         label -= self.offset
         return (indices == label).type(torch.float).sum().item()
     
     def calculate_loss(self,pred,label):
         text_image,x = pred
-        values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
         label -= self.offset
+        return self.loss_fn(similarity,label)
+
+class SimilarityTuningLoss(Criterion):
+    def __init__(self,target_id,dis_func = 'L1',offset=0) -> None:
+        super().__init__()
+        self.dis_func = dis_func
+        self.offset = offset
+        self.target_id = target_id
+        self.similarity_calculator = SimilarityCalculator()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    
+    def calculate_correct(self,pred,label): 
+        text_image,x = pred
+        values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        indices = self.target_id[indices]
+        #print(indices)
+        #print(label)
+        #input()
+        label = self.target_id[label]
+        label -= self.offset
+        return (indices == label).type(torch.float).sum().item()
+    
+    def calculate_loss(self,pred,label):
+        text_image,x = pred
+        values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
+        indices = torch.flatten(indices)
+        #print(indices)
+        #print(label)
+        for i in range(len(label)):
+            current_sim = similarity[i][label[i]*10:label[i]*10 + 10]
+            values, indices = current_sim.topk(1)
+            label[i] = label[i]*10 + indices
+        #print(label[0])
+        #print(similarity[0][label[0]*10:label[0]*10 + 10])
+        #input()
+        #print(indices.shape)
+        #print(similarity.shape)
+        #similarity = similarity[indices]
+        #print(label.shape)
+        #print(indices)
+        #print(similarity.shape)
+        #input()
+        #label -= self.offset
+        #label *= 10
+        #print(label)
+        #input()
         return self.loss_fn(similarity,label)
 
 class PromptClustering(Criterion):

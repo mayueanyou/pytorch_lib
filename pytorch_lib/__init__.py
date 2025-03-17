@@ -10,5 +10,5 @@ from .inferencer import*
 from .pretrained_model import*
 from .utility import*
 
-import torch
+import os,torch
 device = "cuda" if torch.cuda.is_available() else "cpu"

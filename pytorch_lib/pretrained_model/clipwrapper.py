@@ -36,7 +36,7 @@ class ClipWrapper():
         self.similarity_calculator = SimilarityCalculator()
         if generate_text: self.generate_text_features()
         self.extra_infor = {}
-        self.generate_word_bank_2()
+        #self.generate_word_bank_2()
         
     
     def retrieve_from_word_bank(self,input_features,topk=1,dis_func='L1'):
@@ -164,8 +164,8 @@ class ClipWrapper():
             for images, labels in tqdm(dataset):
                 img_features = self.generate_img_features(images)
                 
-                data['data'].append(img_features.cpu().type(torch.float))
-                data['targets'].append(labels.cpu().type(torch.long))
+                data['data'].append(img_features.detach().cpu().type(torch.float))
+                data['targets'].append(labels.detach().cpu().type(torch.long))
                 #break
             data['data'] = torch.cat(data['data'],0)
             data['targets'] = torch.cat(data['targets'],0)
@@ -182,8 +182,8 @@ class ClipWrapper():
         for images, labels in tqdm(dataset):
             img_features = self.generate_img_features(images)
             
-            data['data'].append(img_features.cpu().type(torch.float))
-            data['targets'].append(labels.cpu().type(torch.long))
+            data['data'].append(img_features.detach().cpu().type(torch.float))
+            data['targets'].append(labels.detach().cpu().type(torch.long))
         
         data['data'] = torch.cat(data['data'],0)
         data['targets'] = torch.cat(data['targets'],0)

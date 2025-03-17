@@ -25,6 +25,10 @@ def prepare_loaders(target_list=None,label_setup=None,batch_size=64):
     wine_quality = fetch_ucirepo(id=186) 
     X = torch.tensor(wine_quality.data.features.values,dtype=torch.float)
     y = torch.tensor(wine_quality.data.targets.values,dtype=torch.float)
+    
+    X = torch.div(X, torch.max(X,dim=0).values)
+    y = torch.div(y, torch.max(y,dim=0).values)
+
     dataset = CustomDataset(X,y)
     
     training_data = dataset

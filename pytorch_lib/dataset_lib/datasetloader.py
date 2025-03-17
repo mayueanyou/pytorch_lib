@@ -1,8 +1,44 @@
-import os,sys,copy,torch,random,cv2,torchvision,json
+import os,sys,copy,torch,random,cv2,torchvision,json,pathlib,toml,yaml
 from torch.utils.data import Dataset,DataLoader,random_split
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
 from torchvision import datasets,transforms
+from abc import ABC, abstractmethod
+
+
+class VisionDataset(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self.name = type(self).__name__
+    
+    def get_classes_from_file(self):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + f'/supplement/{self.name}/classes.txt', 'r') as file: self.classes_original = json.loads(file.read())
+        self.classes = list(self.classes_original.values())
+        #print(f'classes: {self.classes}')
+        
+        #with open(current_path + f'/supplement/{self.name}/classes.toml', 'r') as file: self.classes_original = toml.load(file)
+        #class_name = [i[1] for i in self.classes_original['class']]
+        #print(f'classes: {class_name}')
+    
+    @abstractmethod
+    def load(self):pass
+    
+    @abstractmethod
+    def datas(self):pass
+    
+    @abstractmethod
+    def loaders(self):pass
+    
+    def classes(self):
+        return self.classes
+
+
+class ImageFolderDataset(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self.name = type(self).__name__
+
 
 
 def get_classes_from_file(path):
@@ -12,40 +48,30 @@ def get_classes_from_file(path):
         return classes
 
 class CustomDataset(Dataset):
-    def __init__(self, data:torch.tensor, targets, normalize = False,data_transform=None,target_transform=None):
+    def __init__(self, data, targets, data_transforms=None,target_transforms=None):
+        if len(data) != len(targets): raise Exception(f'data:{len(data)},targets:{len(targets)} not match!')
+        
         self.data = data
         self.targets = targets
-        if len(self.data) != len(self.targets):print(f'data:{len(self.data)},targets:{len(self.targets)} not match!')
-        if normalize: self.normalize()
-        self.data_transform = data_transform
-        self.target_transform = target_transform
-        #print(f'data shape: {self.data_shape}')
-        #print(f'targets shape: {self.targets_shape}')
-    
-    def normalize(self):
-        self.data = torch.div(self.data, torch.max(self.data,dim=0).values)
-        self.targets = torch.div(self.targets, torch.max(self.targets,dim=0).values)    
+        self.data_transforms = data_transforms
+        self.target_transforms = target_transforms
+        print(f'Costom Dataset: {len(self.data)}')
+        print(f'Data Transforms: {self.data_transforms}')
+        print(f'Target Transforms: {self.target_transforms}')
+        print('='*100)
+
+    def shuffle(self):
+        idx = torch.randperm(len(self.data))
+        self.data = self.data[idx]
+        self.targets = self.targets[idx]
 
     def __len__(self): return len(self.data)
 
     def __getitem__(self, index):
-        data = self.data[index] if self.data_transform is None else self.data_transform(self.data[index])
-        target = self.targets[index] if self.target_transform is None else self.target_transform(self.targets[index])
+        data = self.data[index] if self.data_transforms is None else self.data_transforms(self.data[index])
+        target = self.targets[index] if self.target_transforms is None else self.target_transforms(self.targets[index])
         return data, target
 
-class CustomDatasetLoader:
-    def __init__(self,train_data,test_data,validate_data,target_list=None,label_setup=None,batch_size=64) -> None:
-        self.train_data = train_data
-        self.test_data = test_data
-        self.validate_data = validate_data
-        self.batch_size = batch_size
-    
-    def loaders(self):
-        train_dataloader = DataLoader(self.train_data, batch_size = self.batch_size)
-        test_dataloader = DataLoader(self.test_data, batch_size = self.batch_size)
-        validate_dataloader = DataLoader(self.validate_data, batch_size = self.batch_size)
-        return train_dataloader,test_dataloader,validate_dataloader
-    
 class DatasetWrapper:
     def __init__(self,dataset) -> None:
         self.dataset = copy.deepcopy(dataset)
@@ -56,14 +82,27 @@ class DatasetWrapper:
     
     def __len__(self): return len(self.dataset_out)
     
-    def reset(self): self.dataset_out = copy.deepcopy(self.dataset)
+    def reset(self): 
+        self.dataset_out = copy.deepcopy(self.dataset)
+        self.length_original = len(self.dataset)
+        self.length_out = len(self.dataset_out)
     
-    def get_sample(self,idx=0):
-        targets_set = set(self.dataset_out.targets.tolist())
+    def extend(self,dataset):
+        self.dataset.data = torch.cat([self.dataset.data,dataset.data])
+        self.dataset.targets = torch.cat([self.dataset.targets,dataset.targets])
+        self.reset()
+    
+    def get_sample(self,target_list=None,amount=1):
+        if target_list is None: target_list = list(range(max(self.dataset_out.targets)))
         data_list = []
-        for i in range(len(targets_set)):
-            idx = self.dataset_out.targets==i
-            data_list.append()
+        targets_list = []
+        for target in target_list:
+            data_list.append(self.dataset_out.data[self.dataset_out.targets==target][:amount])
+            max_amount = max(len(data_list[-1]),amount)
+            targets_list.append(torch.tensor([target]*max_amount))
+        data = torch.cat(data_list)
+        targets = torch.cat(targets_list)
+        return data,targets
     
     def select_bylabel(self,target_list):
         idx = sum(self.dataset_out.targets==i for i in target_list).bool()
@@ -118,17 +157,17 @@ class DatasetLoader():
         self.dataset_reset(target_list,label_setup)
         return self.train_data.dataset_out, self.test_data.dataset_out, self.validate_data.dataset_out
     
-    def get_loaders(self,target_list=None,label_setup=None,batch_size = 64):
+    def get_loaders(self,target_list=None,label_setup=None,batch_size = 64,shuffle=False):
         self.dataset_reset(target_list,label_setup)
         self.print_info(self.train_data, self.test_data, self.validate_data,batch_size)
         if batch_size == -1:
-            train_dataloader = self.train_data(self.train_data.length)
-            test_dataloader = self.test_data(self.test_data.length)
-            validate_dataloader = self.validate_data(self.validate_data.length)
+            train_dataloader = self.train_data(self.train_data.length,shuffle=shuffle)
+            test_dataloader = self.test_data(self.test_data.length,shuffle=shuffle)
+            validate_dataloader = self.validate_data(self.validate_data.length,shuffle=shuffle)
         else:
-            train_dataloader = self.train_data(batch_size)
-            test_dataloader = self.test_data(batch_size)
-            validate_dataloader = self.validate_data(batch_size)
+            train_dataloader = self.train_data(batch_size,shuffle=shuffle)
+            test_dataloader = self.test_data(batch_size,shuffle=shuffle)
+            validate_dataloader = self.validate_data(batch_size,shuffle=shuffle)
         return train_dataloader,test_dataloader,validate_dataloader
     
     def dataset_reset(self,target_list=None,label_setup=None):

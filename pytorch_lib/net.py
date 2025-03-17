@@ -1,5 +1,6 @@
 import os,sys,torch,random,inspect
 from torchsummary import summary
+import torch.optim.lr_scheduler as lr_scheduler
 import torch.nn.functional as F
 import numpy as np
 from sklearn.metrics import confusion_matrix
@@ -9,19 +10,26 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 class Net():
-    def __init__(self,net:torch.nn.Module, load:bool, model_folder_path:str,
-                 postfix:str=None,optimizer:str='Adam',loss:str=None,lr=0.001) -> None:
+    def __init__(self,net:torch.nn.Module, 
+                 load:bool, 
+                 model_folder_path:str,
+                 postfix:str=None,
+                 optimizer:str='Adam',
+                 loss:str=None,
+                 lr=0.001,
+                 lr_s={'gamma':0.99}) -> None:
+        
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
         self.loss = loss
+        self.lr_s = lr_s
         
         self.net_str = inspect.getsource(type(self.net))
         self.net_name = type(self.net).__name__
         self.loss_name = type(self.loss).__name__
         if postfix is not None: self.net_name = self.net_name + '(' + postfix + ')'
-        #if postfix is not None: self.net.name = self.net.name + '_' + postfix
         #summary(self.net, self.net.input_size)
         total_params = sum(p.numel() for p in self.net.parameters())
         print('module name: ',self.net_name)
@@ -48,6 +56,7 @@ class Net():
             self.save_model = False
 
         self.update_optimizer()
+        self.update_lr_scheduler()
     
     
     def model_path(self):
@@ -76,8 +85,12 @@ class Net():
         self.loss = loss
    
     def update_optimizer(self):
-        if self.optimizer_select == 'SGD': self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=0.0)
+        if self.optimizer_select == 'SGD': self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=0.9)
         elif self.optimizer_select == 'Adam': self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate, weight_decay=0)
+    
+    def update_lr_scheduler(self):
+        self.lr_scheduler = lr_scheduler.ExponentialLR(self.optimizer,gamma=self.lr_s['gamma'])
+        #self.lr_scheduler = lr_scheduler.CosineAnnealingLR(self.optimizer,T_max=50)
     
     def update_name(self,postfix,load):
         self.net_name = self.net_name + '_' + postfix
