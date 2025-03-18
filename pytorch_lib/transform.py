@@ -31,9 +31,7 @@ class ReadImageTF(Transform):
         if self.mode == 'PIL':
             image = Image.open(path)
             return image.convert("RGB")
-            #with open(path, "rb") as f: 
-            #    img = Image.open(f)
-            #    return img.convert("RGB")
+            
         elif self.mode == 'torch':
             return torchvision.io.read_image(path, mode = 'RGB').to(torch.float32)
             #return torchvision.io.decode_image(input=path,mode = 'RGB')
