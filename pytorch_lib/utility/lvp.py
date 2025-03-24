@@ -1,7 +1,7 @@
 import os,sys,torch,copy
 from tqdm import tqdm
 from . import*
-from .functions import k_means
+from .functions import k_means,save_tensor
 
 class LVB:
     def __init__(self,name, lvp_list=None, mode='m', path=None,load=True) -> None:
@@ -46,8 +46,9 @@ class LVB:
         self.id_bank = torch.cat((self.id_bank,id))
         self.lvb_size = self.lv_bank.shape
     
-    def save(self,path): 
-        torch.save({'lv':self.lv_bank,'id':self.id_bank, 'classes': self.total_class, 'size': self.lvb_size},path + f'{self.name}_{self.mode}.pt')
+    def save(self,path):
+        data = {'lv':self.lv_bank,'id':self.id_bank, 'classes': self.total_class, 'size': self.lvb_size}
+        save_tensor(data,path + f'{self.name}_{self.mode}.pt')
     
     def load(self,path): 
         data = torch.load(path + f'{self.name}_{self.mode}.pt')

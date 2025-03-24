@@ -8,6 +8,8 @@ import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from .utility import*
+import pytorch_lib as ptl
 
 class Net():
     def __init__(self,net:torch.nn.Module, 
@@ -19,8 +21,9 @@ class Net():
                  lr=0.001,
                  lr_s={'gamma':0.99}) -> None:
         
-        self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
+        self.device = ptl.device #"cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        #print_GPU_info()
+        #print('GPU_Name: ',torch.cuda.get_device_name(0))  if torch.cuda.is_available() else print('No GPU')
 
         self.net = net.to(self.device)
         self.loss = loss
@@ -31,13 +34,18 @@ class Net():
         self.loss_name = type(self.loss).__name__
         if postfix is not None: self.net_name = self.net_name + '(' + postfix + ')'
         #summary(self.net, self.net.input_size)
-        total_params = sum(p.numel() for p in self.net.parameters())
         print('module name: ',self.net_name)
-        print(f'total parameters: {total_params:,}')
+        total_params = ptl.count_parameters(self.net)
         print(f'loss fn: {self.loss_name}')
 
-        self.basic_info = {'best_test_accuracy':0,'best_test_loss':0,'optimizer':optimizer,'best_module': self.net_str, 'best_loss_fn':self.loss_name,
-                           'best_validate_accuracy':0,'learning rate':0,'parameters':total_params}
+        self.basic_info = {'best_test_accuracy':0,
+                           'best_test_loss':0,
+                           'optimizer':optimizer,
+                           'best_module': self.net_str, 
+                           'best_loss_fn':self.loss_name,
+                           'best_validate_accuracy':0,
+                           'learning rate':0,
+                           'parameters':total_params}
         
         self.extra_info = {}
 
@@ -67,7 +75,7 @@ class Net():
         print(f'best validate accuracy: {(self.basic_info["best_validate_accuracy"]*100):>0.2f}%')
         print(f'best test accuracy: {(self.basic_info["best_test_accuracy"]*100):>0.2f}%')
         print(f'best test loss: {self.basic_info["best_test_loss"]:>8f}')
-        print(f'total parameters: {self.basic_info["parameters"]:,}')
+        print(f'total parameters: {self.basic_info["parameters"]}')
         print(f'loss fn: {self.basic_info["best_loss_fn"]}')
         print(f'optimizer: {self.basic_info["optimizer"]}')
         print(f'best_module: \n{self.basic_info["best_module"]}\n')

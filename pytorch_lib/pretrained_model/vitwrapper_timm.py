@@ -6,21 +6,20 @@ from timm.models import checkpoint_seq
 from pprint import pprint
 
 class VitWrapper:
-    def __init__(self,weight='vit_base_patch16_224') -> None:
+    def __init__(self,weight='vit_base_patch16_224',freeze=True) -> None:
         self.weight = weight
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.net = timm.create_model(weight,pretrained=True,num_classes=0)
         self.net.to(self.device)
-        ptl.freeze_model(self.net)
         
         self.load_transforms()
         self.display_info()
-        self.layer_info = ptl.get_layer_info(self.net)
+        if freeze: ptl.freeze_net(self.net)
+        #self.layer_info = ptl.check_layer_status(self.net)
     
     def display_info(self):
         print("Vit: -", self.weight)
-        total_params = ptl.count_parameters(self.net)
-        print(f'total parameters: {total_params:,}')
+        ptl.count_parameters(self.net)
         #print('transfors: -',self.transforms)
         print('='*100)
     
@@ -60,6 +59,22 @@ class VitWrapper:
             data['data'].append(pred.detach().cpu().type(torch.float))
             data['targets'].append(labels.detach().cpu().type(torch.long))
             
+        data['data'] = torch.cat(data['data'],0)
+        data['targets'] = torch.cat(data['targets'],0)
+        return data
+
+    def inference_dataset_plus(self,dataset):
+        self.net.eval()
+        data  = {'input':[],'data':[],'targets':[]}
+        for images, labels in tqdm(dataset):
+            images, labels = images.to(self.device), labels.to(self.device)
+            pred = self.net(images)
+            
+            data['input'].append(images.detach().cpu().type(torch.float))
+            data['data'].append(pred.detach().cpu().type(torch.float))
+            data['targets'].append(labels.detach().cpu().type(torch.long))
+        
+        data['input'] = torch.cat(data['input'],0)
         data['data'] = torch.cat(data['data'],0)
         data['targets'] = torch.cat(data['targets'],0)
         return data

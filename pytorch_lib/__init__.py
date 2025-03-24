@@ -12,3 +12,4 @@ from .utility import*
 
 import os,torch
 device = "cuda" if torch.cuda.is_available() else "cpu"
+print_GPU_info()

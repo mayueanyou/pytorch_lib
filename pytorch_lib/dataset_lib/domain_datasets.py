@@ -3,7 +3,7 @@ from torchvision import datasets
 from torch.utils.data import Dataset,DataLoader
 from torchvision.transforms import ToTensor,Resize,Compose
 
-from .datasetloader import get_classes_from_file
+from .dataset_loader import get_classes_from_file
 
 class OfficeHome:
     def __init__(self,dataset_path,data_transform=Compose([Resize((224,224)),ToTensor()])) -> None:

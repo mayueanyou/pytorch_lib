@@ -6,30 +6,40 @@ from torchvision.transforms import ToTensor,Compose,Resize
 from abc import ABC, abstractmethod
 from tqdm import tqdm
 
-from .datasetloader import *
+from .dataset import DatasetLoader
 
-# class VisionDataset(ABC):
-#     def __init__(self) -> None:
-#         super().__init__()
-#         self.name = type(self).__name__
-    
-#     def get_classes_from_file(self):
-#         current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
-#         with open(current_path + f'/supplement/{self.name}/classes.txt', 'r') as file: self.classes_original = json.loads(file.read())
-#         self.classes = list(self.classes_original.values())
-    
-#     @abstractmethod
-#     def load(self):pass
-    
-#     @abstractmethod
-#     def datas(self):pass
-    
-#     @abstractmethod
-#     def loaders(self):pass
-    
-#     def classes(self):
-#         return self.classes
+def get_classes_from_file(path):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + path, 'r') as file: classes_original = json.loads(file.read())
+        classes = list(classes_original.values())
+        return classes
 
+class VisionDataset(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self.name = type(self).__name__
+    
+    def get_classes_from_file(self):
+        current_path =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+        with open(current_path + f'/supplement/{self.name}/classes.txt', 'r') as file: self.classes_original = json.loads(file.read())
+        self.classes = list(self.classes_original.values())
+        #print(f'classes: {self.classes}')
+        
+        #with open(current_path + f'/supplement/{self.name}/classes.toml', 'r') as file: self.classes_original = toml.load(file)
+        #class_name = [i[1] for i in self.classes_original['class']]
+        #print(f'classes: {class_name}')
+    
+    @abstractmethod
+    def load(self):pass
+    
+    @abstractmethod
+    def datas(self):pass
+    
+    @abstractmethod
+    def loaders(self):pass
+    
+    def classes(self):
+        return self.classes
 
 class ImageFolder:
     def __init__(self,dataset_path:str,transform=ToTensor()) -> None:
