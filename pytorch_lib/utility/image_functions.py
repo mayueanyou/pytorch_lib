@@ -1,4 +1,4 @@
-import os,sys,torch,cv2
+import os,sys,torch,cv2,math
 import torchvision
 from PIL import Image
 from tqdm import tqdm
@@ -32,11 +32,16 @@ def save_dataset_images(dataset, save_path, dataset_name, transform=None):
     if not os.path.exists(save_path): os.makedirs(save_path)
     dataset.data = torch.tensor(dataset.data)
     dataset.targets = torch.tensor(dataset.targets)
+    total_classes = torch.max(dataset.targets)+1
+    folder_leading_zeros = int(math.log(total_classes-1,10))+1
     
-    for id in tqdm(range(torch.max(dataset.targets)+1)):
-        if not os.path.exists(save_path + f'/{dataset_name}_{id}'): os.makedirs(save_path + f'/{dataset_name}_{id}')
+    for id in tqdm(range(total_classes)):
+        class_folder_path = save_path + f'/{dataset_name}_{str(id).zfill(folder_leading_zeros)}'
+        if not os.path.exists(class_folder_path): os.makedirs(class_folder_path)
+        
         data = dataset.data[dataset.targets == id]
+        file_leading_zeros = int(math.log(len(data)-1,10))+1
         for i in tqdm(range(len(data))): 
-            save_rgb_image(data[i], save_path + f'/{dataset_name}_{id}/{i}.png')
+            save_rgb_image(data[i], class_folder_path + f'/{str(i).zfill(file_leading_zeros)}.png')
 
 

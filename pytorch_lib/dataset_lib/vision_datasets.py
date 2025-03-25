@@ -108,10 +108,10 @@ class CIFAR100(VisionDataset):
     def loaders(self,target_list=None,label_setup=None,batch_size=64):
         return self.dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
     
-    def save_images(self,path):
+    def save_images(self,path=None):
         if path is None: path = self.root
-        save_dataset_images(self.train_dataset,path+'train','cifar100')
-        save_dataset_images(self.test_dataset,path+'test','cifar100')
+        save_dataset_images(self.train_dataset,path+'/train','cifar100')
+        save_dataset_images(self.test_dataset,path+'/test','cifar100')
     
 class ImageNet2012:
     def __init__(self,dataset_path,training_transform=Compose([Resize((224,224)),ToTensor()]),test_transform=Compose([Resize((224,224)),ToTensor()]),target_list=None,label_setup=None) -> None:

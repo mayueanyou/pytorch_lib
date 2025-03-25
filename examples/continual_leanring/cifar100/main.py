@@ -14,11 +14,17 @@ torch.set_printoptions(precision=2, threshold=10000, edgeitems=None, linewidth=1
 dataset_path = '/home/yma183/datasets/CIFAR100'
 current_path =  os.path.abspath(os.path.dirname(__file__) + os.path.sep + ".")
 
+
+def save_images(args):
+    tf = ToTensor()
+    dataset = ptl.CIFAR100(dataset_path,training_transform=tf,test_transform=tf)
+    dataset.save_images()
+
 def generate_experiment(args):
-    train_data= ptl.dataset_lib.dataset.scan_image_folder(dataset_path+'/train')
-    train_data = ptl.dataset_lib.dataset.CustomDataset(train_data['data'],train_data['targets'])
-    test_data= ptl.dataset_lib.dataset.scan_image_folder(dataset_path+'/test')
-    test_data = ptl.dataset_lib.dataset.CustomDataset(test_data['data'],test_data['targets'])
+    train_data= ptl.scan_image_folder(dataset_path+'/train')
+    train_data = ptl.CustomDataset(train_data['data'],train_data['targets'])
+    test_data= ptl.scan_image_folder(dataset_path+'/test')
+    test_data = ptl.CustomDataset(test_data['data'],test_data['targets'])
     tasks_num = [5,10,25,50,100]
     for tasks in tasks_num:
         unit = 100//tasks
