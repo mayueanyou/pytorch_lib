@@ -28,10 +28,10 @@ class VisionDataset(ABC):
     def load(self):pass
     
     @abstractmethod
-    def datas(self):pass
+    def get_datas(self):pass
     
     @abstractmethod
-    def loaders(self):pass
+    def get_loaders(self):pass
     
     def classes(self):
         return self.classes
@@ -58,10 +58,10 @@ class MNIST:
         self.test_dataset = datasets.MNIST(root=dataset_path,train=False,download=True,transform=test_transform)
         self.dataset_loader = DatasetLoader(self.train_dataset,self.test_dataset)
     
-    def datas(self,target_list=None,label_setup=None):
+    def get_datas(self,target_list=None,label_setup=None):
         return self.dataset_loader.get_datas(target_list=target_list,label_setup=label_setup)
     
-    def loaders(self,target_list=None,label_setup=None,batch_size=64):
+    def get_loaders(self,target_list=None,label_setup=None,batch_size=64):
         return self.dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
 
 class CIFAR10(VisionDataset):
@@ -78,10 +78,10 @@ class CIFAR10(VisionDataset):
         self.test_dataset = datasets.CIFAR10(root=dataset_path,train=False,download=True,transform=test_transform)
         self.dataset_loader = DatasetLoader(self.train_dataset,self.test_dataset)
     
-    def datas(self,target_list=None,label_setup=None):
+    def get_datas(self,target_list=None,label_setup=None):
         return self.dataset_loader.get_datas(target_list=target_list,label_setup=label_setup)
     
-    def loaders(self,target_list=None,label_setup=None,batch_size=64):
+    def get_loaders(self,target_list=None,label_setup=None,batch_size=64):
         return self.dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
     
     def save_images(self,path=None):
@@ -102,10 +102,10 @@ class CIFAR100(VisionDataset):
         self.test_dataset = datasets.CIFAR100(root=dataset_path,train=False,download=True,transform=test_transform)
         self.dataset_loader = DatasetLoader(self.train_dataset,self.test_dataset)
 
-    def datas(self,target_list=None,label_setup=None):
+    def get_datas(self,target_list=None,label_setup=None):
         return self.dataset_loader.get_datas(target_list=target_list,label_setup=label_setup)
     
-    def loaders(self,target_list=None,label_setup=None,batch_size=64):
+    def get_loaders(self,target_list=None,label_setup=None,batch_size=64):
         return self.dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
     
     def save_images(self,path=None):

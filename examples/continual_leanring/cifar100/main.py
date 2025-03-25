@@ -33,11 +33,16 @@ def generate_experiment(args):
             targets_select = [j for j in range(i,i+unit)]
             #print(targets_select)
             dataset = ptl.select_by_label(train_data,targets_select)
-            ptl.save_as_yaml({'data':dataset.data.tolist(),'targets':dataset.targets.tolist() }, current_path + f'/experiments/{tasks}_tasks/train/{tasks_id}.yaml')
+            dataset_tolist = {'data':dataset.data.tolist(),'targets':dataset.targets.tolist()}
+            ptl.save_as_yaml(dataset_tolist, current_path + f'/experiments/{tasks}_tasks/train/{tasks_id:03}.yaml')
+            
+            dataset = ptl.select_by_label(test_data,targets_select)
+            dataset_tolist = {'data':dataset.data.tolist(),'targets':dataset.targets.tolist()}
+            ptl.save_as_yaml(dataset_tolist, current_path + f'/experiments/{tasks}_tasks/test/{tasks_id:03}.yaml')
             tasks_id += 1
-        
-    #test = ptl.select_by_label(train_data,[0,1,2,3])
-    #ptl.save_as_yaml({'data':test.data.tolist(),'targets':test.targets.tolist() }, current_path + '/experiments/10_tasks/test.yaml')
+
+def main(args):
+    ...
 
 
 if __name__ == '__main__':

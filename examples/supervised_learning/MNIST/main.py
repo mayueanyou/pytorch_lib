@@ -24,7 +24,7 @@ def main():
                   loss=ptl.CELoss())
     
     dataset = ptl.MNIST(dataset_path)
-    train_dl,test_dl,validate_dl = dataset.loaders()
+    train_dl,test_dl,validate_dl = dataset.get_loaders()
     trainer = ptl.Trainer(net,train_dl,test_dl,validate_dl)
     trainer.train_test(10)
     #training_data,test_data,validate_data = prepare_loaders(ToTensor(),target_list=target_list,label_setup=label_setup,batch_size=-1)
