@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/yma183/python_packages/pytorch_template/MNIST/main.py", line 8, in <module>
-    import pytorch_template as pt
-ModuleNotFoundError: No module named 'pytorch_template'

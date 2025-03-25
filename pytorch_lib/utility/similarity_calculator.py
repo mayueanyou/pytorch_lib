@@ -1,5 +1,5 @@
 import os,sys,torch
-from pytorch_lib.dataset_lib import CustomDataset
+from ..dataset_lib.dataset import CustomDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 

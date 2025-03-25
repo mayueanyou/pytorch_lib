@@ -29,19 +29,6 @@ def save_tensor(data,path):
     print(f'Saved: {path}')
 
 
-def scan_image_folder(path):
-    path = pathlib.Path(path)
-    folders = [item for item in sorted(path.iterdir(), key=lambda x: x.name)]
-    dataset = {'data':[],'targets':[]}
-    class_id = 0
-    for folder in folders:
-        current_images = [item.as_posix() for item in folder.iterdir()]
-        dataset['data'] += current_images
-        dataset['targets'] += [class_id]*len(current_images)
-        class_id += 1
-    return dataset
-
-
 def k_means(data_pool,centroids,dis_func='L1',max_iterations=50,min_cluster_size = 5,print_info=False,batch_mode=False):
     sim_cal = SimilarityCalculator(batch_mode=batch_mode)
     if type(centroids) == int: 

@@ -21,7 +21,7 @@ class DatasetLoader():
     
     def get_loaders(self,target_list=None,label_setup=None,batch_size = 64,shuffle=False):
         self.dataset_reset(target_list,label_setup)
-        self.print_info(self.train_data, self.test_data, self.validate_data,batch_size)
+        #self.print_info(self.train_data, self.test_data, self.validate_data,batch_size)
         if batch_size == -1:
             train_dataloader = self.train_data(self.train_data.length,shuffle=shuffle)
             test_dataloader = self.test_data(self.test_data.length,shuffle=shuffle)

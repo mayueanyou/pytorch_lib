@@ -13,7 +13,7 @@ class CustomDataset(Dataset):
         if print_info: self.display_info()
     
     def display_info(self):
-        print(f'Costom Dataset: {len(self.data)}')
+        print(f'Costom Dataset size: {[len(self.data)]}')
         print(f'Data Transforms: {self.data_transforms}')
         print(f'Target Transforms: {self.target_transforms}')
         print('='*100)

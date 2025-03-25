@@ -2,7 +2,7 @@ import os,sys,torch,einops,inspect
 from torch import nn
 import torch.nn.functional as F
 from einops import rearrange
-import pytorch_lib as pl
+import pytorch_lib as ptl
 
 
 class FNN1(nn.Module):
@@ -21,7 +21,7 @@ class pool1(nn.Module):
     def __init__(self):
         super().__init__()
         self.fnn1 = nn.Linear(32*32*3,512)
-        self.pool1 = pl.Pool(512,10,1)
+        self.pool1 = ptl.Pool(512,10,1)
         #self.pool2 = pl.Pool(512,10,3)
         #self.pool3 = pl.Pool(512,10,3)
         self.cls = nn.Linear(512,10)

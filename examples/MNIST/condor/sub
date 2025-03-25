@@ -1,8 +1,0 @@
-executable = /home/yma183/python_packages/condor_src/conda_wrapper
-arguments = /home/yma183/python_packages/pytorch_template/MNIST/main.py -f main -net FNN_1
-error= ./err
-output= ./out
-log= ./log
-Requirements = (TotalGPUs > 0)
-+request_gpus = 1
-queue

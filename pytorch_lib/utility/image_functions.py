@@ -30,6 +30,8 @@ def save_rgb_image(image, path, mode = 'PIL'):
 
 def save_dataset_images(dataset, save_path, dataset_name, transform=None):
     if not os.path.exists(save_path): os.makedirs(save_path)
+    dataset.data = torch.tensor(dataset.data)
+    dataset.targets = torch.tensor(dataset.targets)
     
     for id in tqdm(range(torch.max(dataset.targets)+1)):
         if not os.path.exists(save_path + f'/{dataset_name}_{id}'): os.makedirs(save_path + f'/{dataset_name}_{id}')

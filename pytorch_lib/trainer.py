@@ -3,15 +3,22 @@ import numpy as np
 from tqdm import tqdm
 
 class Trainer():
-    def __init__(self,net,train_data=None,test_data=None,validate_data=None):
+    def __init__(self,net,train_dataloader=None,test_dataloader=None,validate_dataloader=None):
         super().__init__()
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-        self.train_dataloader = train_data
-        self.test_dataloader = test_data
-        self.validate_dataloader = validate_data
+        self.train_dataloader = train_dataloader
+        self.test_dataloader = test_dataloader
+        self.validate_dataloader = validate_dataloader
+        self.print_info()
 
         self.net = net
+    
+    def print_info(self):
+        print(f'batch size: {self.train_dataloader.batch_size}')
+        print(f'data in total:  train[{len(self.train_dataloader.dataset)}] test[{len(self.test_dataloader.dataset)}] validate[{len(self.validate_dataloader.dataset)}]')
+        print(f'batchs in total: train[{len(self.train_dataloader)}] test[{len(self.test_dataloader)}] validate[{len(self.validate_dataloader)}]\n')
+        print('='*100)
     
     def update_extra_info(self):
         pass

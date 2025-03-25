@@ -18,31 +18,6 @@ class FNN_1(nn.Module):
         x = self.fc1(x)
         return x#,x
 
-class FNN_test(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.name = type(self).__name__
-
-        self.fc1 = fnn_cell(784,32,10)
-
-    def forward(self,x):
-        x = x.view(-1, 784)
-        x = self.fc1(x)
-        return x,x
-
-class FNN_2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.name = type(self).__name__
-
-        self.fc1 = nn.Linear(784, 32)
-        self.fc2 = nn.Linear(32, 10)
-
-    def forward(self,x):
-        x = x.view(-1, 784)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x,x
 
 class CNN_1(nn.Module):
     class Cell(nn.Module):
