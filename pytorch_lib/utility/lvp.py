@@ -1,54 +1,92 @@
 import os,sys,torch,copy
+import numpy as np
 from tqdm import tqdm
 from . import*
-from .functions import k_means,save_tensor
+from .functions import save_data,load_data
 from .similarity_calculator import SimilarityCalculator
+from .kmeans_calculator import KmeansCalculator
+
 
 class LVB:
-    def __init__(self,name, lvp_list=None, mode='m', path=None,load=True) -> None:
+    def __init__(self,path, lvp_path_list=None,batch_mode=False) -> None:
+        self.path = path
+        self.lvb_file = f'{path}.npy'
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.sc = SimilarityCalculator()
-        self.name = name
-        self.mode = mode
-        self.total_class = 0
-        self.lvb_size = 0
-        if lvp_list != None: self.generate_lvb(lvp_list,mode)
-        elif load: self.load(path)
-        print(f'{self.name} LVB: class {self.total_class} size {self.lvb_size}')
+        self.batch_mode = batch_mode
+        self.lvp_path_list = lvp_path_list
+        self.lvb_status = {'total_distance':0,
+                           'distance_among_centroids':0,
+                           'distance_centroids_between_mean':0,
+                           'distance_pool_between_mean':0}
+        
+        self.load_lvps()
     
+    def save(self):
+        save_data(self.lvb_file,self.lvp_path_list)
+    
+    def load_lvps(self):
+        if self.lvp_path_list is None:
+            if os.path.isfile(self.lvb_file): self.lvp_path_list = load_data(self.lvb_file)
+            else: return
+        
+        self.lvp_list = [LVP(path) for path in self.lvp_path_list]
+        self.total_class = len(self.lvp_list)
+    
+    def save_lvps(self):
+        for lvp in self.lvp_list: lvp.save()
+
     def generate_confidence(self):
         max_values, max_indices = torch.min(self.var_bank, dim=1, keepdim=True)
         self.lv_confidence = torch.ones(self.lv_bank.shape[0],self.lv_bank.shape[1])
         #self.lv_confidence = 1 - self.var_bank/max_values
         #self.lv_bank *= self.lv_confidence
     
-    def generate_lvb(self,lvp_list,mode='m'):
-        lv_list = []
-        var_list = []
-        id_list = []
-        self.total_class = len(lvp_list)
-        for lvp in lvp_list:
+    def generate_lvb_from_dataset(self,dataset,k=10,k_range=None,target_list=None,dis_func='Cos'):
+        lvp_path_list = []
+        if target_list is None: target_list = range(torch.max(dataset.targets)+1)
+        for i in tqdm(target_list):
+            data_i = dataset.data[dataset.targets==i]
+            path = f'{self.path}_{i}.pt'
+            lvp_i = LVP(path= path, generate=True,id = i,lvp = data_i,dis_func=dis_func)
+            lvp_i.generate_k_cluster(k=k,k_range=k_range,dis_func=dis_func)
+            lvp_i.save()
+            lvp_path_list.append(path)
+        self.lvp_path_list = np.array(lvp_path_list)
+        
+        save_data(self.lvb_file,self.lvp_path_list)
+        self.load_lvps()
+        return self.lvp_path_list
+    
+    def generate_lvb(self,mode='m'):
+        lv_list, var_list, id_list = [], [], []
+        for lvp in self.lvp_list:
+            if mode == 'c':
+                ...
+                #self.lvb_status['total_distance'] += lvp.lvp_status['group_sum']
+                #self.lvb_status['distance_among_centroids'] += lvp.lvp_status['among_centroids']
+                #self.lvb_status['distance_centroids_between_mean'] += lvp.lvp_status['centroids_between_mean']
+                #self.lvb_status['distance_pool_between_mean'] += lvp.lvp_status['pool_between_mean']
             lv,var,id =  lvp.get_lvp(mode)
             lv_list.append(lv)
-            var_list.append(var)
+            if var is not None: var_list.append(var)
             id_list.append(id)
         self.lv_bank = torch.cat((lv_list))
-        self.var_bank = torch.cat((var_list))
+        self.var_bank = None if len(var_list)==0 else torch.cat((var_list))
         self.id_bank = torch.cat((id_list))
         self.lvb_size = self.lv_bank.shape
+        print(f'LVB: mode {mode} class {self.total_class} size {self.lvb_size}')
+        #if mode == 'c': print(self.lvb_status)
     
-    def eval_dataset(self,dataloader, dis_func='L1',with_confidence=False):
-        acc,num_data = 0,0
+    def eval_dataset(self,dataset,mode='m',dis_func='L1',with_confidence=False):
+        self.generate_lvb(mode)
         self.id_bank = self.id_bank.to(self.device)
+        
         if not with_confidence:
-            for image_features, labels in tqdm(dataloader):
-                values, indices, similarity, similarity_raw = self.sc(self.lv_bank,image_features,dis_func=dis_func)
-                indices = self.id_bank[indices]
-                indices = torch.flatten(indices)
-                result = torch.eq(labels.to(self.device),indices.to(self.device))
-                acc += torch.sum(result)
-                num_data += len(labels)
-            
+            values, indices, similarity, similarity_raw = self.sc(self.lv_bank,dataset.data,dis_func=dis_func,batch_mode=self.batch_mode)
+            indices = torch.flatten(indices)
+            indices = self.id_bank[indices]
+            acc = torch.sum(torch.eq(dataset.targets.to(self.device),indices.to(self.device))) / len(dataset.targets)
             
         else:
             self.generate_confidence()
@@ -60,7 +98,8 @@ class LVB:
                 
                 var = self.var_bank.unsqueeze(0)
                 var = var.repeat(len(image_features),1,1)
-                #distence[distence > var] = distence[distence > var] / var[distence > var]
+                #distence[distence < var] *= 1.1 #distence[distence > var] / var[distence > var]
+                distence[var==torch.zeros(768)] = 100
 
                 distence = torch.sum(distence,dim=2) #/ torch.count_nonzero(distence,dim=2)
                 
@@ -69,47 +108,60 @@ class LVB:
                 result = torch.eq(labels.to(self.device),indices.to(self.device))
                 acc += torch.sum(result)
                 num_data += len(labels)
-        acc = acc.to(torch.float) / num_data
+        
         print('accuracy: ',acc)
-        return acc,num_data
+        return acc
 
     def extend(self,lv,id):
         self.lv_bank = torch.cat((self.lv_bank,lv))
         self.id_bank = torch.cat((self.id_bank,id))
         self.lvb_size = self.lv_bank.shape
-    
-    def save(self,path):
-        data = {'lv':self.lv_bank,'var':self.var_bank,'id':self.id_bank, 'classes': self.total_class, 'size': self.lvb_size}
-        save_tensor(data,path + f'{self.name}_{self.mode}.pt')
-    
-    def load(self,path): 
-        data = torch.load(path + f'{self.name}_{self.mode}.pt')
-        self.lv_bank = data['lv']
-        self.var_bank = data['var']
-        self.id_bank = data['id']
-        self.total_class = data['classes']
-        self.lvb_size = data['size']
 
 class LVP:
-    def __init__(self,id,lvp,pool_size = 10,cluster_size=10,dis_func='L1') -> None:
-        self.lvp = lvp
-        self.lvp_mean = torch.unsqueeze(torch.mean(self.lvp,dim=0),dim=0)
-        self.lvp_var = torch.unsqueeze(torch.var(self.lvp,dim=0),dim=0)
-        #self.lvp_confidence = 1 - self.lvp_var/torch.max(self.lvp_var)
-        self.max_iterations = 50
-        self.pool_size = pool_size
-        self.cluster_size = cluster_size
+    def __init__(self,path,generate=False,pool_size_limit = 100,id=None,lvp=None,dis_func='L1',print_info=False) -> None:
+        self.file_path = path
+        self.pool_size_limit = pool_size_limit
+        self.kc = KmeansCalculator(dis_func=dis_func)
         
+        self.lvp_status = None
         
-        self.id = id
-        self.sc = SimilarityCalculator()
-        self.dis_func = dis_func
-        print(f'LVP: {id}')
-        print(f'pool size: {self.lvp.shape}')
+        if generate:
+            self.id = id
+            self.k = 0
+            self.lvp = lvp
+            self.lvp_mean = torch.unsqueeze(torch.mean(self.lvp,dim=0),dim=0)
+            self.lvp_var = torch.unsqueeze(torch.var(self.lvp,dim=0),dim=0)
+            self.lvp_clusters = None
+            self.lvp_clusters_mean = None
+            self.lvp_clusters_var = None
+        elif os.path.isfile(self.file_path): self.load()
+        
+        if print_info: print(f'LVP: id: [{self.id}] pool size: {self.lvp.shape}')
+    
+    def load(self):
+        data = torch.load(self.file_path)
+        self.id = data['id']
+        self.k = data['k']
+        self.lvp = data['lvp']
+        self.lvp_mean = data['lvp_mean']
+        self.lvp_var = data['lvp_var']
+        self.lvp_clusters = data['lvp_clusters']
+        self.lvp_clusters_mean = data['lvp_clusters_mean']
+        self.lvp_clusters_var = data['lvp_clusters_var']
+        self.lvp_status = data['lvp_status']
+    
+    def save(self):
+        data = {'id':self.id,'k':self.k,'lvp':self.lvp,'lvp_mean':self.lvp_mean,'lvp_var':self.lvp_var,'lvp_clusters_mean':self.lvp_clusters_mean,
+                'lvp_clusters':self.lvp_clusters,'lvp_clusters_var':self.lvp_clusters_var,'lvp_status':self.lvp_status}
+        save_data(self.file_path,data)
     
     def get_lvp(self,mode='mean'):
         if mode == 'mean' or mode == 'm': 
             lvp = self.lvp_mean
+            lvp_var = self.lvp_var
+            lvp_id = torch.tensor([self.id],dtype=torch.long)
+        elif mode == 'cluster_mean' or mode == 'cm': 
+            lvp = self.lvp_clusters_mean
             lvp_var = self.lvp_var
             lvp_id = torch.tensor([self.id],dtype=torch.long)
         elif mode == 'bank' or mode == 'b': 
@@ -140,11 +192,21 @@ class LVP:
         self.lvp_mean = torch.unsqueeze(torch.mean(self.lvp,dim=0),dim=0)
         self.lvp_var = torch.unsqueeze(torch.var(self.lvp,dim=0),dim=0)
     
-    def generate_k_cluster(self,k=1,print_info=False):
-        centroids,labels = k_means(self.lvp,k,dis_func=self.dis_func,max_iterations=self.max_iterations,print_info=print_info)
+    def generate_k_cluster(self,k=10,k_range=None,max_iterations=100,dis_func='L1'):
+        print(f'Generating k cluster: {self.id} {k} {k_range}')
+        self.k = k
+        self.kc.group_dis_func = dis_func
+        if k_range is None: centroids,labels = self.kc(self.lvp,centroids=k,max_iterations=max_iterations)
+        else: centroids,labels = self.kc.iterative_generation(self.lvp,k=k,k_range=k_range,max_iterations=max_iterations)
+        
         self.lvp_clusters = centroids
+        self.lvp_clusters_mean = torch.unsqueeze(torch.mean(self.lvp_clusters,dim=0),dim=0)
         self.lvp_clusters_var = []
-        for i in range(len(centroids)): self.lvp_clusters_var.append(torch.unsqueeze(torch.var(self.lvp[labels == i], dim=0),dim=0))
+        for i in range(len(centroids)): 
+            centroid_group = self.lvp[labels == i]
+            if len(centroid_group) == 1: centroid_var = torch.zeros(1,centroids.shape[-1])
+            else: centroid_var = torch.unsqueeze(torch.var(centroid_group, dim=0),dim=0)
+            self.lvp_clusters_var.append(centroid_var)
         self.lvp_clusters_var = torch.cat((self.lvp_clusters_var))
     
     def generate_cluster_threshhold(self,threshhold,print_info=True):

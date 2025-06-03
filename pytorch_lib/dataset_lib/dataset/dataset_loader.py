@@ -19,8 +19,8 @@ class DatasetLoader():
         self.dataset_reset(target_list,label_setup)
         return self.train_data.dataset_out, self.test_data.dataset_out, self.validate_data.dataset_out
     
-    def get_loaders(self,target_list=None,label_setup=None,batch_size = 64,shuffle=False):
-        self.dataset_reset(target_list,label_setup)
+    def get_loaders(self,target_list=None,labels_setup=None,batch_size = 64,shuffle=False):
+        self.dataset_reset(target_list,labels_setup)
         #self.print_info(self.train_data, self.test_data, self.validate_data,batch_size)
         if batch_size == -1:
             train_dataloader = self.train_data(self.train_data.length,shuffle=shuffle)
@@ -32,7 +32,7 @@ class DatasetLoader():
             validate_dataloader = self.validate_data(batch_size,shuffle=shuffle)
         return train_dataloader,test_dataloader,validate_dataloader
     
-    def dataset_reset(self,target_list=None,label_setup=None):
-        if self.train_data is not None: self.train_data.transform(target_list=target_list,label_setup=label_setup)
-        if self.test_data is not None: self.test_data.transform(target_list=target_list,label_setup=label_setup)
-        if self.validate_data is not None: self.validate_data.transform(target_list=target_list,label_setup=label_setup)
+    def dataset_reset(self,target_list=None,labels_setup=None):
+        if self.train_data is not None: self.train_data.transform(target_list=target_list,labels_setup=labels_setup)
+        if self.test_data is not None: self.test_data.transform(target_list=target_list,labels_setup=labels_setup)
+        if self.validate_data is not None: self.validate_data.transform(target_list=target_list,labels_setup=labels_setup)

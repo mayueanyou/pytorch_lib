@@ -6,6 +6,20 @@ import torch.nn.functional as F
 
 input_size = (1,28,28)
 
+
+class Meta_tensor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        num = 100
+        self.meta_tensor = nn.Parameter(torch.rand(num,784))
+        self.fn1 = nn.Linear(num,10,bias=False)
+    
+    def forward(self, x):
+        x = x.view(-1, 784)
+        x = torch.cdist(x,self.meta_tensor,p=1)
+        x = self.fn1(x)
+        return x
+
 class FNN_1(nn.Module):
     def __init__(self):
         super().__init__()

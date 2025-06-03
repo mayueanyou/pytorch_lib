@@ -58,11 +58,11 @@ class MNIST:
         self.test_dataset = datasets.MNIST(root=dataset_path,train=False,download=True,transform=test_transform)
         self.dataset_loader = DatasetLoader(self.train_dataset,self.test_dataset)
     
-    def get_datas(self,target_list=None,label_setup=None):
-        return self.dataset_loader.get_datas(target_list=target_list,label_setup=label_setup)
+    def get_datas(self,target_list=None,labels_setup=None):
+        return self.dataset_loader.get_datas(target_list=target_list,labels_setup=labels_setup)
     
-    def get_loaders(self,target_list=None,label_setup=None,batch_size=64):
-        return self.dataset_loader.get_loaders(target_list=target_list,label_setup=label_setup,batch_size=batch_size)
+    def get_loaders(self,target_list=None,labels_setup=None,batch_size=64):
+        return self.dataset_loader.get_loaders(target_list=target_list,labels_setup=labels_setup,batch_size=batch_size)
 
 class CIFAR10(VisionDataset):
     def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor(),load_data=True) -> None:

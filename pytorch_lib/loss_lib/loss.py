@@ -10,10 +10,22 @@ class Criterion(ABC):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
     @abstractmethod
-    def calculate_correct(self):pass
+    def calculate_performance(self):pass
     
     @abstractmethod
     def calculate_loss(self):pass
+    
+    def is_better(self,current_performance,current_loss,best_performance,best_loss):
+        if current_performance > best_performance: return True
+        elif current_performance == best_performance and current_loss < best_loss: return True
+        else: return False
+    
+    def print_result(self,val_performance,val_loss,test_performance,test_loss,
+                     best_val_performance,best_val_loss,best_test_performance,best_test_loss):
+        print(f"Validate: \n Performance: {(100*val_performance):>0.2f}%, Avg loss: {val_loss:>8f} \n")
+        print(f"Test: \n Performance: {(100*test_performance):>0.2f}%, Avg loss: {test_loss:>8f} \n")
+        print(f"Best Validate: \n Performance: {(100*best_val_performance):>0.2f}%, Avg loss: {best_val_loss:>8f} \n")
+        print(f"Best Test: \n Performance: {(100*best_test_performance):>0.2f}%, Avg loss: {best_test_loss:>8f} \n")
 
 class IntegratorLoss_old(Criterion):
     def __init__(self,dis_func = 'L1') -> None:
@@ -22,7 +34,7 @@ class IntegratorLoss_old(Criterion):
         self.similarity_calculator = SimilarityCalculator()
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
    
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         text_image,x = pred
         label -= torch.min(label)
         values, indices, similarity = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
@@ -44,7 +56,7 @@ class IntegratorLoss(Criterion):
         self.similarity_calculator = SimilarityCalculator()
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
     
-    def calculate_correct(self,pred,label): 
+    def calculate_performance(self,pred,label): 
         text_image,x = pred
         values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
         indices = torch.flatten(indices)
@@ -66,7 +78,7 @@ class SimilarityTuningLoss(Criterion):
         self.similarity_calculator = SimilarityCalculator()
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
     
-    def calculate_correct(self,pred,label): 
+    def calculate_performance(self,pred,label): 
         text_image,x = pred
         values, indices, similarity,similarity_raw = self.similarity_calculator(text_image,x,dis_func=self.dis_func)
         indices = torch.flatten(indices)
@@ -111,7 +123,7 @@ class PromptClustering(Criterion):
         self.similarity_calculator = SimilarityCalculator()
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
     
-    def calculate_correct(self,pred,label): 
+    def calculate_performance(self,pred,label): 
         x,prompts = pred
         values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
         indices = torch.flatten(indices)
@@ -132,7 +144,7 @@ class PromptTraining(Criterion):
         self.similarity_calculator = SimilarityCalculator()
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
     
-    def calculate_correct(self,pred,label): 
+    def calculate_performance(self,pred,label): 
         x,prompts = pred
         values, indices, similarity = self.similarity_calculator(prompts,x,dis_func=self.dis_func)
         indices = torch.flatten(indices)
@@ -151,7 +163,7 @@ class SelfContrastiveLoss(Criterion):
         self.similarity_calculator = SimilarityCalculator(topk=2)
         self.loss_fn = nn.CosineEmbeddingLoss()
         
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         pred = pred.detach()
         values, indices = self.similarity_calculator(pred,pred,dis_func=self.mode)
         indices = indices[:,1]
@@ -176,7 +188,7 @@ class CE_SimilarityLoss(Criterion):
         self.similarity_calculator = SimilarityCalculator(topk=1)
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
     
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         values, indices, similarity = self.similarity_calculator(self.target_tensor,pred,dis_func=self.dis_func)
         indices = torch.flatten(indices)
         return (indices == label).type(torch.float).sum().item()
@@ -193,7 +205,7 @@ class CELoss_SelfContrastiveLoss(Criterion):
         self.rate_ce = rate
         self.rate_em = 1-rate
         
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         pred_1,pred_2 = pred
         pred_1 = F.softmax(pred_1,dim=1)
         return (pred_1.argmax(1) == label).type(torch.float).sum().item()
@@ -212,7 +224,7 @@ class ContrastiveLoss(Criterion):
         self.loss_fn_1 = nn.CosineEmbeddingLoss()
         self.loss_fn_2 = nn.CosineEmbeddingLoss()
         
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         pred_1,pred_2 = pred
         pred_1,pred_2 = pred_1.detach(),pred_2.detach()
         values, indices = self.similarity_calculator(pred_1,pred_2,dis_func=self.mode)
@@ -235,7 +247,7 @@ class ContrastiveClsLoss(Criterion):
         self.loss_fn_1 = nn.CosineEmbeddingLoss()
         self.loss_fn_2 = nn.CosineEmbeddingLoss()
         
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         pred_1,pred_2 = pred
         pred_1,pred_2 = pred_1.detach(),pred_2.detach()
         values, indices = self.similarity_calculator(pred_1,pred_2,dis_func=self.mode)
@@ -258,7 +270,7 @@ class ClipLoss(Criterion):
         self.loss_fn_image = nn.CrossEntropyLoss(label_smoothing=0)
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
         
-    def calculate_correct(self,pred,labels):
+    def calculate_performance(self,pred,labels):
         image_features = pred
         image_features /= image_features.norm(dim=-1, keepdim=True)
         similarity = (100.0 * image_features @ self.text_features.T).softmax(dim=-1)
@@ -276,7 +288,7 @@ class CosEmLoss(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.CosineEmbeddingLoss()
         
-    def calculate_correct(self,pred_1,pred_2,label):
+    def calculate_performance(self,pred_1,pred_2,label):
         pred_1 = F.softmax(pred_1,dim=1)
         pred_2 = F.softmax(pred_2,dim=1)
         #loss(input1, input2, target)
@@ -287,10 +299,10 @@ class CosEmLoss(Criterion):
         return self.loss_fn(pred_1,pred_2,label)
 
 class CELoss(Criterion):
-    def __init__(self) -> None:
-        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0)
+    def __init__(self,label_smoothing=0) -> None:
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
         
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         pred = F.softmax(pred,dim=1)
         return (pred.argmax(1) == label).type(torch.float).sum().item()
     
@@ -301,20 +313,20 @@ class MSELoss(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.MSELoss()
     
-    def calculate_correct(self,pred,label):
-        difference = torch.abs(pred - label)
-        correct = torch.mean(1 - torch.div(difference,label)) * len(difference)
-        return correct
+    def calculate_performance(self,pred,label):
+        distance = torch.cdist(pred,label,p=2)
+        performance = torch.exp(torch.neg(torch.mean(distance)))
+        return performance
     
     def calculate_loss(self,pred,label):
-        return self.loss_fn(pred,label)     
+        return self.loss_fn(pred,label)
 
 class MSELoss_Binary(Criterion):
     def __init__(self) -> None:
         self.loss_fn = nn.MSELoss()
         self.threshold = 0.5
     
-    def calculate_correct(self,pred,label):
+    def calculate_performance(self,pred,label):
         temp_p = torch.zeros((len(label),1))
         if torch.any(pred>self.threshold):
             temp_p[pred>self.threshold] = 1.0

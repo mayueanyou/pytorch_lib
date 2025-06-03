@@ -191,7 +191,8 @@ class ClipWrapper():
 
 
 if __name__ == '__main__':
-    cw = ClipWrapper(8)
+    cw = ClipWrapper(5)
+    cw.generate_text_features()
     #test = clip.tokenize('ff adsf fdas')
     #image = torch.rand((3,224,224))
     #image = cw.preprocess(image)

@@ -4,22 +4,77 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 class SimilarityCalculator():
-    def __init__(self,topk=1,use_cdist=True,batch_mode=False) -> None:
-        self.topk = topk
-        self.use_cdist = use_cdist
+    def __init__(self) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.distence_weight = 1.001
-        self.batch_mode = batch_mode
-        
-    def __call__(self,label_features,input_features,dis_func='L1'): #[n,d], [x,d]
+    
+    def p_norm(self,label_features,input_features,p):
+        distance = torch.cdist(input_features,label_features,p=p)
+        return distance
+
+    def convert_distance_to_similarity(self,distance):
+        similarity = torch.neg(distance) + (torch.max(distance)*self.distence_weight)
+        similarity = similarity / (torch.max(similarity)*self.distence_weight)
+        return similarity
+
+    def convert_Cos_similarity_to_distance(self,similarity_raw):
+        return 1 - similarity_raw
+    
+    def mul(self,label_features,input_features):
+        similarity = input_features @ label_features.T
+        return similarity
+
+    def cos(self,label_features,input_features):
+        input_features = input_features.unsqueeze(1)
+        input_features = input_features.repeat(1,label_features.size(0),1)
+        similarity = torch.nn.functional.cosine_similarity(input_features,label_features,dim=2)
+        return similarity
+
+    def calculate_similarity(self,label_features,input_features,dis_func='L1'):
         label_features = label_features.to(self.device)
-        if dis_func=='L1': return self.p_norm_based(label_features,input_features,p=1)
-        elif dis_func=='L2': return self.p_norm_based(label_features,input_features,p=2)
+        input_features = input_features.to(self.device)
+        if dis_func=='L1': return self.p_norm(label_features,input_features,p=1)
+        elif dis_func=='L2': return self.p_norm(label_features,input_features,p=2)
         elif dis_func=='Mul': return self.mul(label_features,input_features)
         elif dis_func=='Cos': return self.cos(label_features,input_features)
-        elif type(dis_func)==int or type(dis_func)==float: 
-            return self.p_norm_based(label_features,input_features,dis_func,p=dis_func)
+        elif type(dis_func)==int or type(dis_func)==float: return self.p_norm(label_features,input_features,dis_func,p=dis_func)
         else: raise Exception('SimilarityCalculator: Key error!')
+    
+    def __call__(self,label_features,input_features,dis_func='L1',topk=1,batch_mode=False,batch_size = [1000,1000]): #[n,d], [x,d]
+        if batch_mode:
+            batch_size[0] = len(label_features)if batch_size[0] == -1 else batch_size[0]
+            batch_size[1] = len(input_features)if batch_size[1] == -1 else batch_size[1]
+            
+            label_features_dl = DataLoader(CustomDataset(label_features,None,print_info=False), batch_size=batch_size[0])
+            input_features_dl = DataLoader(CustomDataset(input_features,None,print_info=False), batch_size=batch_size[1])
+            
+            similarity_list = []
+            
+            for input_features_batch in tqdm(input_features_dl):
+                input_features_batch = input_features_batch.to(self.device)
+                
+                similarity_batch_list = []
+                for label_features_batch in label_features_dl:
+                    label_features_batch = label_features_batch.to(self.device)
+                    
+                    similarity = self.calculate_similarity(label_features_batch,input_features_batch,dis_func=dis_func)
+                    similarity = similarity.detach().cpu()
+                    similarity_batch_list.append(similarity)
+                    
+                similarity_batch = torch.cat((similarity_batch_list),dim=1)
+                similarity_list.append(similarity_batch)
+            similarity = torch.cat((similarity_list))
+        else:
+            similarity = self.calculate_similarity(label_features,input_features,dis_func=dis_func)
+        
+        similarity_raw = similarity
+        if dis_func not in ['Cos','Mul']: similarity = self.convert_distance_to_similarity(similarity)
+        
+        similarity = similarity.softmax(dim=-1)
+        values, indices = similarity.topk(topk)
+        return values, indices, similarity, similarity_raw
+    
+    
     
     def print_top_predictions(self,label, candidate_texts, candidate_indices, candidate_similaritys):
         print(f"Label: {label}",end=' | ')
@@ -55,43 +110,3 @@ class SimilarityCalculator():
     def select_from_label(self,label_features,input_features,dis_func='L1'):
         values, indices, similarity, similarity_raw = self(label_features,input_features,dis_func=dis_func)
         return label_features[indices]
-    
-    def topk_similarity(self,similarity):
-        similarity_raw = similarity
-        #similarity_raw, _ = torch.topk(similarity,self.topk)
-        similarity = similarity.softmax(dim=-1)
-        values, indices = similarity.topk(self.topk)
-        return values, indices, similarity, similarity_raw
-
-    def p_norm_based(self,label_features,input_features,p):
-        if self.batch_mode:
-            dataset = CustomDataset(input_features,None,print_info=False)
-            dataloader = DataLoader(dataset, batch_size=10240)
-            similarity_list = []
-            for data in tqdm(dataloader):
-                data = data.to(self.device)
-                similarity_batch = torch.cdist(data,label_features,p=p)
-                similarity_batch = similarity_batch.detach().cpu()
-                similarity_list.append(similarity_batch)
-            similarity = torch.cat((similarity_list))
-        else:
-            input_features = input_features.to(self.device)
-            similarity = torch.cdist(input_features,label_features,p=p)
-        
-        similarity = torch.neg(similarity) + (torch.max(similarity)*self.distence_weight)
-        similarity = similarity / (torch.max(similarity)*self.distence_weight)
-        return self.topk_similarity(similarity)
-    
-    def mul(self,label_features,input_features):
-        similarity = input_features @ label_features.T
-        return self.topk_similarity(similarity)
-    
-    def cos(self,label_features,input_features):
-        similarity = self.Cosine_similarity(label_features, input_features)
-        return self.topk_similarity(similarity)
-    
-    def Cosine_similarity(self,label_features,input_features):
-        input_features = input_features.unsqueeze(1)
-        input_features = input_features.repeat(1,label_features.size(0),1)
-        similarity = torch.nn.functional.cosine_similarity(input_features,label_features,dim=2)
-        return similarity

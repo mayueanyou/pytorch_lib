@@ -39,12 +39,12 @@ class DatasetWrapper:
         self.dataset_out.targets = self.dataset_out.targets[idx]
         print(f'select label:\n {target_list}')
     
-    def change_label(self,label_setup):
-        for setup in label_setup:
+    def change_label(self,labels_setup):
+        for setup in labels_setup:
             idx = sum(self.dataset_out.targets==i for i in setup[0]).bool()
             self.dataset_out.targets[idx] = setup[1]
         print('change label:')
-        for it in label_setup: print(f'{it[0]} -> {it[1]}')
+        for it in labels_setup: print(f'{it[0]} -> {it[1]}')
     
     def split(self,rate=0.2):
         split_number = int(self.length_original*rate)
@@ -56,13 +56,14 @@ class DatasetWrapper:
         part_2.data = part_2.data[random_indices[:split_number]]
         part_2.targets = part_2.targets[random_indices[:split_number]]
         print(f'split: part_1[{len(part_1)}] part_2[{len(part_2)}]')
+        print('='*100)
         return DatasetWrapper(part_1),DatasetWrapper(part_2)
     
-    def transform(self,target_list=None,label_setup=None):
+    def transform(self,target_list=None,labels_setup=None):
         self.reset()
         self.dataset_out = copy.deepcopy(self.dataset)
         if target_list is not None: self.select_bylabel(target_list)
-        if label_setup is not None: self.change_label(label_setup)
+        if labels_setup is not None: self.change_label(labels_setup)
         self.length_out = len(self.dataset_out)
     
     def __call__(self,batch_size=64,shuffle=False):

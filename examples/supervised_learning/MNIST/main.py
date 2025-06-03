@@ -18,7 +18,7 @@ dataset_path = "/home/yma183/datasets/MNIST"
 current_path =  os.path.abspath(os.path.dirname(__file__) + os.path.sep + ".")
 
 def main():
-    net = ptl.Net(net = FNN_1(),
+    net = ptl.Net(net = Meta_tensor(),
                   load = False,
                   model_folder_path = current_path + '/model/',
                   loss=ptl.CELoss())

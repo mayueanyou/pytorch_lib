@@ -1,4 +1,5 @@
 import os,sys,torch,warnings,pathlib,yaml,torchvision
+import numpy as np
 from .similarity_calculator import SimilarityCalculator
 from tqdm import tqdm
 
@@ -23,40 +24,46 @@ def L2_similarity(label_features,input_features):
     return similarity
 
 
-def save_tensor(data,path):
+def save_data(path,data,mode='tensor'):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    torch.save(data,path)
+    if type(data) == np.ndarray: np.save(path,data)
+    elif type(data) == torch.Tensor or mode=='tensor': torch.save(data,path)
+    else: raise ValueError("Unsupported data type. Use numpy array or torch tensor")
     print(f'Saved: {path}')
 
+def load_data(path):
+    if os.path.isfile(path):
+        if path.endswith('.npy'): data = np.load(path)
+        elif path.endswith('.pt'): data = torch.load(path)
+        else: raise ValueError("Unsupported file format. Use .npy or .pt")
+    else: raise FileNotFoundError(f"File not found: {path}")
+    print(f'Loaded: {path}')
+    return data
 
-def k_means(data_pool,centroids,dis_func='L1',max_iterations=50,min_cluster_size = 5,print_info=False,batch_mode=False):
-    sim_cal = SimilarityCalculator(batch_mode=batch_mode)
-    if type(centroids) == int: 
-        if centroids > len(data_pool): 
-            warnings.warn("centroids should be less than the length of data_pool")
-            return data_pool,None
-        else: centroids = data_pool[torch.randperm(len(data_pool))[:centroids]]
+
+def rate_from_tensors(test_data,candidates,data_pool,topk=1):
+    sc = SimilarityCalculator()
+    candidate_data = data_pool[candidates].view(-1,data_pool.shape[-1])
+    candidate_targets = candidates.repeat_interleave(data_pool.shape[1])
     
-    values, indices, similarity, distance = sim_cal(centroids,data_pool,dis_func = dis_func)
-    labels_current = indices.flatten().to('cpu')
+    values, indices, similarity, similarity_raw = sc(candidate_data,test_data,topk = topk)
+    indices = indices.flatten()
+    score = similarity_raw.flatten()
     
-    #for step in range(max_iterations):
-    for step in tqdm(range(max_iterations)):
-        for i in range(len(centroids)):
-            sys.stdout.flush()
-            if torch.sum(labels_current == i) < min_cluster_size: 
-                centroids[i] = data_pool[torch.randperm(len(data_pool))[0]]
-                #centroids[i] += torch.randn(centroids[i].shape) * torch.mean(centroids[i]) * 0.01
-            else: 
-                centroids[i] = torch.mean(data_pool[labels_current == i], dim=0)
-                
-            if print_info: print(f'{i}, {len(labels_current[labels_current==i])}', end=' | ')
-        if print_info: print()
-        
-        values, indices, similarity, similarity_raw = sim_cal(centroids,data_pool,dis_func=dis_func)
-        labels_new = indices.flatten().to('cpu')
-        
-        if torch.equal(labels_current,labels_new): break
-        labels_current = labels_new
+    score = score[indices]
+    indices = candidate_targets[indices]
     
-    return centroids,labels_current
+    candidate_count = torch.tensor([(indices == it).sum().item() for it in candidates])
+    candidate_score = torch.tensor([(score[indices == it]).sum().item() for it in candidates])
+    
+    #predict = candidates[torch.argmax(torch.tensor(candidate_score))]
+    predict = candidates[torch.argmax(torch.tensor(candidate_count))]
+    
+    return predict, candidate_score, candidate_count
+
+def count_max_items(tensor):
+    unique, counts = torch.unique(tensor, return_counts=True)
+    max_count_index = torch.argmax(counts)
+    max_item = unique[max_count_index]
+    max_count = counts[max_count_index]
+    return max_item, max_count

@@ -16,6 +16,7 @@ class Trainer():
     
     def print_info(self):
         print(f'batch size: {self.train_dataloader.batch_size}')
+        print(f'data dimension: {self.train_dataloader.dataset.data.shape[1:]}')
         print(f'data in total:  train[{len(self.train_dataloader.dataset)}] test[{len(self.test_dataloader.dataset)}] validate[{len(self.validate_dataloader.dataset)}]')
         print(f'batchs in total: train[{len(self.train_dataloader)}] test[{len(self.test_dataloader)}] validate[{len(self.validate_dataloader)}]\n')
         print('='*100)
@@ -34,27 +35,20 @@ class Trainer():
         for batch, (X, y) in enumerate(self.train_dataloader):
             X, y = X.to(self.device), y.to(self.device)
 
-            pred,loss = self.net.train(X,y,True)
+            pred,loss = self.net.train(X,y)
             print_loss(batch,loss)
         self.net.lr_scheduler.step()
         print('current learning rate: ',self.net.lr_scheduler.get_last_lr())
     
     def test(self):
-        def print_result(name,accuracy,loss=0):
-            print(f"{name}: \n Accuracy: {(100*accuracy):>0.2f}%, Avg loss: {loss:>8f} \n")
-        
-        def wrap_val_eval(model):
-            update,validate_accuracy, validate_loss = self.net.evalue(self.validate_dataloader)
-            _,test_accuracy, test_loss = self.net.evalue(self.test_dataloader)
-            if update: model.update_best_model(validate_accuracy, test_accuracy, test_loss)
-            print_result('Validate',validate_accuracy,validate_loss)
-            print_result('Test',test_accuracy,test_loss)
-            print_result('Best Validate',model.basic_info['best_validate_accuracy'])
-            print_result('Best Test',model.basic_info['best_test_accuracy'],model.basic_info['best_test_loss'])
-
         print('net:')
-        wrap_val_eval(self.net)
-      
+        update,validate_performance, validate_loss = self.net.evalue(self.validate_dataloader)
+        _,test_performance, test_loss = self.net.evalue(self.test_dataloader)
+        if update: self.net.update_best_model(validate_performance,validate_loss,test_performance,test_loss)
+        self.net.loss.print_result(validate_performance,validate_loss,test_performance,test_loss,
+                                self.net.basic_info['best_validate_performance'],self.net.basic_info['best_validate_loss'],
+                                self.net.basic_info['best_test_performance'],self.net.basic_info['best_test_loss'])
+    
     def train_test(self, epochs):
         for t in tqdm(range(epochs)):
             print(f"Epoch {t+1}\n-------------------------------")

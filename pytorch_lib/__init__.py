@@ -1,8 +1,8 @@
 from .trainer import Trainer
 from .net import Net
 from .dataset_lib import*
-from .loss import*
-from .transform import*
+from .loss_lib import*
+from .transform_lib import*
 from .visualization import*
 from .module_lib import*
 from .vision_language import*
