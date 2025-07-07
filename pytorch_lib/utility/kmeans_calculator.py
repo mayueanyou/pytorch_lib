@@ -91,7 +91,8 @@ class KmeansCalculator():
         return total_distance
     
     def random_generate_k_centroids(self,data_pool,centroids):
-        if centroids > len(data_pool): Exception("centroids should be less than the length of data_pool")
+        if centroids >= len(data_pool): 
+            raise Exception(f'data_pool size: {data_pool.shape}, kmeans: {centroids} \n centroids should be less than the length of data_pool')
         else: centroids = data_pool[torch.randperm(len(data_pool))[:centroids]]
         
         if self.mode == 'from_mean': centroids = torch.randn(centroids.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim=True)
@@ -145,7 +146,6 @@ class KmeansCalculator():
         
         if verbose: self.print_info(data_pool,step,data_labels,centroids,self.group_dis_func,min_cluster_size)
         #centroids, data_labels = self.remove_small_group(data_pool,centroids,data_labels,min_cluster_size,batch_mode)
-        #self.update_distance(centroids,labels_current)
         return centroids,data_labels
     
     def iterative_generation(self,data_pool,k=10,k_range=[(2,20)],max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True):
@@ -165,27 +165,4 @@ class KmeansCalculator():
         print(f'k_range: {k_range}')
         self.print_info(original_data_pool,0,data_labels,centroids,self.group_dis_func,min_cluster_size)
         #centroids, data_labels = self.remove_small_group(original_data_pool,centroids,data_labels,min_cluster_size,batch_mode)
-        return centroids,data_labels
-
-    def adaptive_generation_2(self,k=10,k_range=(20,30),max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True):
-        store = 0
-        centroids = []
-        data_labels = []
-        for k_step in range(k_range[0],k_range[1]+1):
-            current_centroids, current_data_labels = self(k_step,max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True)
-            centroids.append(current_centroids)
-        centroids = torch.cat((centroids))
-        
-        centroids_2 = []
-        
-        for k_step in range(2,21):
-            current_centroids, current_data_labels = k_means(centroids,k_step,dis_func=self.dis_func,max_iterations=max_iterations,min_cluster_size=2,batch_mode=batch_mode,repick=repick)
-            centroids_2.append(current_centroids)
-        centroids_2 = torch.cat((centroids_2))
-        
-        centroids,_ = k_means(centroids_2,k,dis_func=self.dis_func,max_iterations=max_iterations,min_cluster_size=2,batch_mode=batch_mode,repick=repick)
-        #print(centroids.shape)
-        #input()
-        print(f'k_range: {k_range} k: {k}')
-        
         return centroids,data_labels

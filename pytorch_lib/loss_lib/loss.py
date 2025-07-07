@@ -337,3 +337,19 @@ class MSELoss_Binary(Criterion):
     def calculate_loss(self,pred,label):
         loss = self.loss_fn(pred.view(-1),label.float())
         return loss
+
+class KLLoss(Criterion):
+    def __init__(self) -> None:
+        self.loss_fn = nn.KLDivLoss(reduction='batchmean',log_target=True)
+    
+    def calculate_performance(self,pred,label):
+        pred = F.log_softmax(pred,dim=1)
+        label = F.softmax(label,dim=1)
+        #distance = torch.cdist(pred,label,p=2)
+        #performance = torch.exp(torch.neg(torch.mean(distance)))
+        return 1
+    
+    def calculate_loss(self,pred,label):
+        pred = F.log_softmax(pred,dim=1)
+        label = F.softmax(label,dim=1)
+        return self.loss_fn(pred,label)

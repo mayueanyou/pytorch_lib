@@ -83,12 +83,21 @@ class SimilarityCalculator():
             print(f"{i+1} {candidate_texts[indice]}: {100 * candidate_similaritys[indice].item():.2f}%", end=', ')
         print()
     
-    def evalue_dataset(self,label_features,dataset,dis_func='L1',label_text=None):
+    def evalue_dataset_print(self,label_features,dataset,dis_func='L1',label_text=None):
         if label_text is None: label_text = [i for i in range(len(label_features))]
         
         values, indices, similarity, similarity_raw = self(label_features,dataset.data,dis_func=dis_func)
         for i in range(len(indices)):
             self.print_top_predictions(label_text[dataset.targets[i].item()], label_text, indices[i], similarity[i])
+    
+    def evalue_dataset(self,label_features,label_id,dataset,dis_func='L1'):
+        data = dataset.data.to(self.device)
+        targets = dataset.targets.to(self.device)
+        values, indices, similarity, similarity_raw = self(label_features,data,dis_func=dis_func,topk=1)
+        indices = indices.flatten()
+        indices = label_id[indices]
+        accuracy = torch.sum(indices == targets).item() / len(targets)
+        return accuracy
     
     def evalue_datasetloader(self,label_features,dataloader,dis_func='L1',label_text=None):
         if label_text is None: label_text = [i for i in range(len(label_features))]
