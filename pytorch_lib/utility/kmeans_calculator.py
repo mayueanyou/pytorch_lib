@@ -12,8 +12,7 @@ def k_means(data_pool,centroids,dis_func='L1',max_iterations=100,min_cluster_siz
                 return data_pool,None
             else: 
                 centroids = data_pool[torch.randperm(len(data_pool))[:centroids]]
-                
-                centroids = torch.randn(centroids.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim = True)
+                #centroids = torch.randn(centroids.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim = True)
         return centroids
 
     centroids = random_generate_k_centroids(centroids)
@@ -21,7 +20,7 @@ def k_means(data_pool,centroids,dis_func='L1',max_iterations=100,min_cluster_siz
     average_group = len(data_pool) / len(centroids)
     if average_group < min_cluster_size: min_cluster_size = 2 
     
-    values, indices, similarity, distance = sim_cal(centroids,data_pool,dis_func = dis_func,batch_mode=batch_mode)
+    indices= sim_cal.only_get_indices(centroids,data_pool,dis_func = dis_func,batch_mode=batch_mode)
     labels_current = indices.flatten().to('cpu')
     
     for step in range(max_iterations):
@@ -34,7 +33,7 @@ def k_means(data_pool,centroids,dis_func='L1',max_iterations=100,min_cluster_siz
             else: 
                 centroids[i] = torch.mean(data_pool[labels_current == i], dim=0)
         
-        values, indices, similarity, similarity_raw = sim_cal(centroids,data_pool,dis_func=dis_func,batch_mode=batch_mode)
+        indices = sim_cal.only_get_indices(centroids,data_pool,dis_func=dis_func,batch_mode=batch_mode)
         labels_new = indices.flatten().to('cpu')
         
         if torch.equal(labels_current,labels_new): break

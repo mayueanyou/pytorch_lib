@@ -41,7 +41,7 @@ class ImageFolder:
         self.root = dataset_path
         self.data = datasets.ImageFolder(root = self.root ,transform = transform)
     
-    def loaders(self,batch_size=64):
+    def get_loaders(self,batch_size=64):
         dataloader = DataLoader(self.data, batch_size = batch_size)
 
         return dataloader

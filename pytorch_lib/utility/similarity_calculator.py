@@ -74,7 +74,42 @@ class SimilarityCalculator():
         values, indices = similarity.topk(topk)
         return values, indices, similarity, similarity_raw
     
-    
+    def only_get_indices(self,label_features,input_features,dis_func='L1',topk=1,batch_mode=False,batch_size = [1000,1000]):
+        if batch_mode:
+            batch_size[0] = len(label_features)if batch_size[0] == -1 else batch_size[0]
+            batch_size[1] = len(input_features)if batch_size[1] == -1 else batch_size[1]
+            
+            label_features_dl = DataLoader(CustomDataset(label_features,None,print_info=False), batch_size=batch_size[0])
+            input_features_dl = DataLoader(CustomDataset(input_features,None,print_info=False), batch_size=batch_size[1])
+            
+            indices = []
+            
+            for input_features_batch in tqdm(input_features_dl):
+                input_features_batch = input_features_batch.to(self.device)
+                
+                similarity_batch_list = []
+                for label_features_batch in label_features_dl:
+                    label_features_batch = label_features_batch.to(self.device)
+                    
+                    similarity = self.calculate_similarity(label_features_batch,input_features_batch,dis_func=dis_func)
+                    similarity = similarity.detach().cpu()
+                    similarity_batch_list.append(similarity)
+                    
+                similarity_batch = torch.cat((similarity_batch_list),dim=1)
+                
+                if dis_func not in ['Cos','Mul']: similarity_batch = self.convert_distance_to_similarity(similarity_batch)
+                similarity_batch = similarity_batch.softmax(dim=-1)
+                values, indices_batch = similarity_batch.topk(topk)
+                indices.append(indices_batch)
+                
+            indices = torch.cat((indices))
+        else:
+            similarity = self.calculate_similarity(label_features,input_features,dis_func=dis_func)
+            if dis_func not in ['Cos','Mul']: similarity = self.convert_distance_to_similarity(similarity)
+            similarity = similarity.softmax(dim=-1)
+            values, indices = similarity.topk(topk)
+            
+        return indices
     
     def print_top_predictions(self,label, candidate_texts, candidate_indices, candidate_similaritys):
         print(f"Label: {label}",end=' | ')
