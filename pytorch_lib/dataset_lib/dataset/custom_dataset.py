@@ -1,4 +1,4 @@
-import os,sys,torch
+import os,sys,torch,copy
 from torch.utils.data import Dataset
 
 class CustomDataset(Dataset):
@@ -23,6 +23,20 @@ class CustomDataset(Dataset):
         idx = torch.randperm(len(self.data))
         self.data = self.data[idx]
         self.targets = self.targets[idx]
+    
+    def split(self, split_ratio=0.2):
+        split_number = int(len(self.targets)*split_ratio)
+        random_indices = torch.randperm(len(self))
+        new_dataset = copy.deepcopy(self)
+        part_1 = CustomDataset(data=new_dataset.data[random_indices[split_number:]],
+                               targets=new_dataset.targets[random_indices[split_number:]],
+                               data_transforms=self.data_transforms,
+                               target_transforms=self.target_transforms)
+        part_2 = CustomDataset(data=new_dataset.data[random_indices[:split_number]],
+                               targets=new_dataset.targets[random_indices[:split_number]],
+                               data_transforms=self.data_transforms,
+                               target_transforms=self.target_transforms)
+        return part_1, part_2
 
     def __len__(self): return len(self.data)
 

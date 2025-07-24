@@ -35,6 +35,20 @@ class LVB:
     
     def save_lvps(self):
         for lvp in self.lvp_list: lvp.save()
+    
+    def initialize_lvp_from_dataset(self,dataset,target_list=None):
+        lvp_path_list = []
+        if target_list is None: target_list = range(torch.max(dataset.targets)+1)
+        for i in target_list:
+            data_i = dataset.data[dataset.targets==i]
+            path = f'{self.path}_{i}.pt'
+            lvp_i = LVP(path= path, generate=True,id = i,data = data_i)
+            lvp_i.save()
+            lvp_path_list.append(path)
+        self.lvp_path_list = np.array(lvp_path_list)
+        
+        save_data(self.lvb_file,self.lvp_path_list)
+        self.load_lvps()
 
     def generate_confidence(self):
         max_values, max_indices = torch.min(self.var_bank, dim=1, keepdim=True)
@@ -42,23 +56,17 @@ class LVB:
         #self.lv_confidence = 1 - self.var_bank/max_values
         #self.lv_bank *= self.lv_confidence
     
-    def generate_lvb_from_dataset(self,dataset,k=10,k_range=None,target_list=None,dis_func='Cos'):
-        lvp_path_list = []
-        if target_list is None: target_list = range(torch.max(dataset.targets)+1)
-        for i in tqdm(target_list):
-            data_i = dataset.data[dataset.targets==i]
-            path = f'{self.path}_{i}.pt'
-            lvp_i = LVP(path= path, generate=True,id = i,data = data_i,dis_func=dis_func)
-            lvp_i.generate_k_cluster(k=k,k_range=k_range,dis_func=dis_func)
-            lvp_i.save()
-            lvp_path_list.append(path)
-        self.lvp_path_list = np.array(lvp_path_list)
-        
-        save_data(self.lvb_file,self.lvp_path_list)
-        self.load_lvps()
-        return self.lvp_path_list
+    def generate_lvb_from_dataset(self,dataset,k=10,k_range=None,target_list=None,dis_func='L1',from_mean_rate=1):
+        self.initialize_lvp_from_dataset(dataset,target_list)
+        self.generate_lvb(k=k,k_range=k_range,dis_func=dis_func,from_mean_rate=from_mean_rate)
+        self.save_lvps()
+        self.save()
+
+    def generate_lvb(self,k=10,k_range=None,dis_func='L1',from_mean_rate=1):
+        for lvp in tqdm(self.lvp_list):
+            lvp.generate_k_cluster(k=k,k_range=k_range,dis_func=dis_func,from_mean_rate=from_mean_rate)
     
-    def generate_lvb(self,mode='m'):
+    def get_lvb(self,mode='m'):
         lv_list, var_list, id_list = [], [], []
         for lvp in self.lvp_list:
             lv,var,id =  lvp.get_lvp(mode)
@@ -73,7 +81,7 @@ class LVB:
         print(f'LVB: mode {mode} class {self.total_class} size {self.lvb_size}')
     
     def eval_dataset(self,dataset,mode='m',dis_func='L1',with_confidence=False):
-        self.generate_lvb(mode)
+        self.get_lvb(mode)
         self.id_bank = self.id_bank.to(self.device)
         
         if not with_confidence:
@@ -126,13 +134,12 @@ class LVP:
                  pool_size_limit = 100,
                  id=None,
                  data=None,
-                 dis_func='L1',
                  print_info=False,
-                 remove_amount=0) -> None:
+                 remove_amount=10) -> None:
         
         self.file_path = path
         self.pool_size_limit = pool_size_limit
-        self.kc = KmeansCalculator(dis_func=dis_func)
+        self.kc = KmeansCalculator()
         self.sc = SimilarityCalculator()
         self.remove_amount = remove_amount
         
@@ -181,7 +188,7 @@ class LVP:
     #     self.lvp_var = torch.unsqueeze(torch.var(self.lvp,dim=0),dim=0)
     #     #self.lvp_confidence = 1 - self.lvp_var/torch.max(self.lvp_var)
     
-    def generate_k_cluster(self,k=10,k_range=None,max_iterations=100,dis_func='L1'):
+    def generate_k_cluster(self,k=10,k_range=None,max_iterations=100,dis_func='L1', from_mean_rate=1):
         def generate_var(centroids,labels):
             clusters_var = []
             for i in range(len(centroids)): 
@@ -193,9 +200,10 @@ class LVP:
             return clusters_var
         
         print('='*100)
-        print(f'Generating k cluster: id: {self.id} k: {k} k_range: {k_range}')
+        print(f'Generating k cluster: id: {self.id} k: {k}')
         self.k = k
         self.kc.group_dis_func = dis_func
+        self.kc.from_mean_rate = from_mean_rate
         
         centroids,labels = self.kc(self.lvp['p']['data'],centroids=k,max_iterations=max_iterations)
         clusters_var = generate_var(centroids,labels)
@@ -203,6 +211,7 @@ class LVP:
         
         if k_range is not None: 
             print('='*100)
+            print(f'Generating iterative k cluster: id: {self.id} k: {k} k_range: {k_range}')
             centroids,labels = self.kc.iterative_generation(data_pool=self.lvp['p']['data'],k=k,k_range=k_range,max_iterations=max_iterations)
             clusters_var = generate_var(centroids,labels)
             self.add_lvp('itkm',centroids,clusters_var,info={'k':k,'k_range':k_range,'max_iterations':max_iterations})

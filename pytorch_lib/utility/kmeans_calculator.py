@@ -49,12 +49,13 @@ def k_means(data_pool,centroids,dis_func='L1',max_iterations=100,min_cluster_siz
     return centroids,labels_current
 
 class KmeansCalculator():
-    def __init__(self,dis_func='L1',batch_mode=False,mode='from_mean'):
+    def __init__(self,dis_func='L1',batch_mode=False,mode='from_mean',from_mean_rate=1):
         self.sc = SimilarityCalculator()
         self.group_dis_func = dis_func
         self.evalue_dis_func = 'Cos'
         self.batch_mode = batch_mode
         self.mode = mode
+        self.from_mean_rate = from_mean_rate
         if mode not in ['from_mean','from_pool']: raise Exception('KmeansCalculator: mode should be from_mean or from_pool')
         
         self.distance = {'among_centroids':0,
@@ -93,8 +94,8 @@ class KmeansCalculator():
         if centroids >= len(data_pool): 
             raise Exception(f'data_pool size: {data_pool.shape}, kmeans: {centroids} \n centroids should be less than the length of data_pool')
         else: centroids = data_pool[torch.randperm(len(data_pool))[:centroids]]
-        
-        if self.mode == 'from_mean': centroids = torch.randn(centroids.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim=True)
+
+        if self.mode == 'from_mean': centroids = torch.randn(centroids.shape) * torch.mean(data_pool) * self.from_mean_rate + torch.mean(data_pool,dim=0,keepdim=True)
         return centroids
 
     def adjust_min_cluster_size(self,data_pool,centroids,min_cluster_size):
@@ -104,8 +105,10 @@ class KmeansCalculator():
 
     def adjust_centroid(self,data_pool,centroid,repick=True):
         if repick: 
-            #centroid = data_pool[torch.randperm(len(data_pool))[0]]
-            centroid = torch.randn(centroid.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim = True)
+            if self.mode == 'from_mean':
+                centroid = torch.randn(centroid.shape) * torch.mean(data_pool) + torch.mean(data_pool,dim=0,keepdim = True)
+            else: centroid = data_pool[torch.randperm(len(data_pool))[0]]
+            
         else: centroid += torch.randn(centroid.shape) * torch.mean(centroid)
         return centroid
     
@@ -114,7 +117,7 @@ class KmeansCalculator():
         centroids = centroids[grout_status > min_cluster_size]
         values, indices, similarity, similarity_raw = self.sc(centroids,data_pool,dis_func=self.group_dis_func,batch_mode=batch_mode)
         data_labels = indices.flatten().to('cpu')
-        self.print_info(data_pool,0,data_labels,centroids,self.group_dis_func,min_cluster_size)
+        #self.print_info(data_pool,0,data_labels,centroids,self.group_dis_func,min_cluster_size)
         return centroids,data_labels
 
     def print_info(self,data_pool,step,labels_current,centroids,dis_func,min_cluster_size):
@@ -123,7 +126,7 @@ class KmeansCalculator():
         print(f'data_pool: [{data_pool.shape}] k: [{len(centroids)}] steps: [{step}] dis_func: [{dis_func}] min_cluster_size [{min_cluster_size}]')
         print('group size: ',grout_status)
 
-    def __call__(self,data_pool,centroids,max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True,verbose=True):
+    def __call__(self,data_pool,centroids,max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True,remove=False,verbose=True):
         if type(centroids) == int: centroids = self.random_generate_k_centroids(data_pool,centroids)
         min_cluster_size = self.adjust_min_cluster_size(data_pool,centroids,min_cluster_size)
         
@@ -144,10 +147,10 @@ class KmeansCalculator():
         data_labels = labels_current
         
         if verbose: self.print_info(data_pool,step,data_labels,centroids,self.group_dis_func,min_cluster_size)
-        #centroids, data_labels = self.remove_small_group(data_pool,centroids,data_labels,min_cluster_size,batch_mode)
+        if remove: centroids, data_labels = self.remove_small_group(data_pool,centroids,data_labels,min_cluster_size,batch_mode)
         return centroids,data_labels
     
-    def iterative_generation(self,data_pool,k=10,k_range=[(2,20)],max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True):
+    def iterative_generation(self,data_pool,k=10,k_range=[(2,20)],max_iterations=100,min_cluster_size = 4,batch_mode=False,repick=True,remove=False):
         original_data_pool = data_pool.clone().detach()
         for range_setp in k_range:
             new_data_pool = []
@@ -163,5 +166,5 @@ class KmeansCalculator():
         data_labels = indices.flatten().to('cpu')
         print(f'k_range: {k_range}')
         self.print_info(original_data_pool,0,data_labels,centroids,self.group_dis_func,min_cluster_size)
-        #centroids, data_labels = self.remove_small_group(original_data_pool,centroids,data_labels,min_cluster_size,batch_mode)
+        if remove: centroids, data_labels = self.remove_small_group(original_data_pool,centroids,data_labels,min_cluster_size,batch_mode)
         return centroids,data_labels

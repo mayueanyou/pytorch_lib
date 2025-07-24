@@ -125,10 +125,10 @@ class SimilarityCalculator():
         for i in range(len(indices)):
             self.print_top_predictions(label_text[dataset.targets[i].item()], label_text, indices[i], similarity[i])
     
-    def evalue_dataset(self,label_features,label_id,dataset,dis_func='L1'):
+    def evalue_dataset(self,label_features,label_id,dataset,dis_func='L1',batch_mode=False):
         data = dataset.data.to(self.device)
         targets = dataset.targets.to(self.device)
-        values, indices, similarity, similarity_raw = self(label_features,data,dis_func=dis_func,topk=1)
+        values, indices, similarity, similarity_raw = self(label_features,data,dis_func=dis_func,topk=1,batch_mode=batch_mode)
         indices = indices.flatten()
         indices = label_id[indices]
         accuracy = torch.sum(indices == targets).item() / len(targets)
