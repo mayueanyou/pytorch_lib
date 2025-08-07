@@ -1,0 +1,22 @@
+BFAS-FACHD8H613-S1-its-u20-nfs-20210413
+---------------
+The GPU ID is 
+---------------
+
+No GPU
+loading annotations into memory...
+Done (t=18.87s)
+creating index...
+index created!
+loading annotations into memory...
+Done (t=0.70s)
+creating index...
+index created!
+Dataset:  COCO
+type(img) = <class 'torch.Tensor'>
+type(target) = <class 'list'>
+type(target[0]) = <class 'dict'>
+target[0].keys() = dict_keys(['segmentation', 'area', 'iscrowd', 'image_id', 'bbox', 'category_id', 'id'])
+---------------
+Job Done!
+---------------

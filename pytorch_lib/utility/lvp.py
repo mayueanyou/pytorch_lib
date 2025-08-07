@@ -69,10 +69,10 @@ class LVB:
     def get_lvb(self,mode='m'):
         lv_list, var_list, id_list = [], [], []
         for lvp in self.lvp_list:
-            lv,var,id =  lvp.get_lvp(mode)
+            lv,lv_var,lv_id =  lvp.get_lvp(mode)
             lv_list.append(lv)
-            if var is not None: var_list.append(var)
-            id_list.append(id)
+            if lv_var is not None: var_list.append(lv_var)
+            id_list.append(lv_id)
             
         self.lv_bank = torch.cat((lv_list))
         self.var_bank = None if len(var_list)==0 else torch.cat((var_list))
@@ -135,7 +135,7 @@ class LVP:
                  id=None,
                  data=None,
                  print_info=False,
-                 remove_amount=10) -> None:
+                 remove_amount=0) -> None:
         
         self.file_path = path
         self.pool_size_limit = pool_size_limit

@@ -9,3 +9,9 @@ pandas
 seaborn
 einops
 opencv-python
+toml
+pyyaml
+wget
+ftfy
+regex
+timm

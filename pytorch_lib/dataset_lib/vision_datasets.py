@@ -195,3 +195,16 @@ class ImageNetRC:
         train_dataloader = DataLoader(self.training_data, batch_size = batch_size)
         test_dataloader = DataLoader(self.test_data, batch_size = batch_size)
         return train_dataloader,test_dataloader
+
+class COCO:
+    def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor()) -> None:
+        self.root = dataset_path
+        self.training_data = datasets.CocoDetection(root=self.root + '/train2017', annFile=self.root + '/annotations/instances_train2017.json', transform=training_transform)
+        self.test_data = datasets.CocoDetection(root=self.root + '/val2017', annFile=self.root + '/annotations/instances_val2017.json', transform=test_transform)
+        self.name = 'COCO'
+        print('Dataset: ',self.name)
+    
+    def loaders(self,batch_size=64):
+        train_dataloader = DataLoader(self.training_data, batch_size = batch_size)
+        test_dataloader = DataLoader(self.test_data, batch_size = batch_size)
+        return train_dataloader,test_dataloader
