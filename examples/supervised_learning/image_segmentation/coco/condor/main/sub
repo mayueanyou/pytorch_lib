@@ -1,7 +1,0 @@
-executable = /home/yma183/python_packages/condor_src/condor_src/conda_wrapper
-arguments = py3.10 /home/yma183/python_packages/pytorch_lib/examples/supervised_learning/image_segmentation/coco/main.py 
-error= /home/yma183/python_packages/pytorch_lib/examples/supervised_learning/image_segmentation/coco/condor/main/err
-output= /home/yma183/python_packages/pytorch_lib/examples/supervised_learning/image_segmentation/coco/condor/main/out
-log= /home/yma183/python_packages/pytorch_lib/examples/supervised_learning/image_segmentation/coco/condor/main/log
-Requirements = (Machine != "Empty")&&(Machine != "CRUSH-NODE-10-5-87-4")&&(Machine != "SURGE-OG-10-5-204-23")&&(Machine != "SURGE-OG-10-5-137-119")&&(Machine != "SURGE-OG-10-5-141-225")&&(Machine != "SURGE-OG-10-5-141-211")&&(Machine != "CRUSH-NODE-10-5-33-10")&&(Machine != "CRUSH-NODE-10-5-7-3")
-queue
