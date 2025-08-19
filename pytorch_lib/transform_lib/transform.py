@@ -1,7 +1,8 @@
-import os,sys,copy,torch,random,cv2,torchvision
+import os,sys,copy,torch,random,cv2,torchvision,skimage
 from torch.utils.data import Dataset,DataLoader
 import torchvision.transforms.functional as TF
 import torch.nn.functional as NNF
+import numpy as np
 from PIL import Image
 from abc import ABC,abstractmethod
 
@@ -14,6 +15,63 @@ class Transform:
     
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
+
+class COCOTargetsTF(Transform):
+    def __init__(self,height,width) -> None:
+        super().__init__()
+        self.width = width
+        self.height = height
+
+    def process_segmentation(self,segmentation, width, height):
+        if isinstance(segmentation, list):
+            from skimage.draw import polygon
+            polygon_list = segmentation
+            mask_list = []
+            if len(polygon_list) == 0: 
+                mask_list.append(torch.zeros((self.height, self.width), dtype=torch.bool))
+                mask_list = torch.stack(mask_list, dim=0)
+            else:
+                for j in range(len(polygon_list)):
+                    polygon_item = polygon_list[j]
+                    polygon_item = torch.tensor(polygon_item).reshape(-1, 2)
+                    mask_np = np.zeros((height, width), dtype=np.uint8)
+                    rr, cc = polygon(polygon_item[:, 1], polygon_item[:, 0], shape=(height, width))
+                    mask_np[rr, cc] = 1
+                    mask_np = skimage.transform.resize(mask_np, (self.height, self.width), anti_aliasing=False)
+                    mask = torch.from_numpy(mask_np).to(torch.bool)
+                    mask_list.append(mask)
+                if len(mask_list) > 1:
+                    mask = mask_list[0]
+                    for i in range(1, len(mask_list)):
+                        mask = torch.logical_or(mask, mask_list[i])
+                else:
+                    mask = mask_list[0]
+
+        else:
+            import pycocotools.mask as mask_util
+            rle_dict = segmentation
+            rle_dict = mask_util.frPyObjects(rle_dict, rle_dict['size'][0], rle_dict['size'][1])
+            mask_np = mask_util.decode(rle_dict)
+            mask = skimage.transform.resize(mask_np, (self.height, self.width), anti_aliasing=False)
+            mask = torch.from_numpy(mask).to(torch.bool)
+        return mask
+    
+    def __call__(self, x):
+        boxes =[]
+        labels = []
+        masks = []
+        for item in x:
+            boxes.append(torch.tensor(item['boxes'],dtype=torch.float32))
+            labels.append(torch.tensor(item['labels'],dtype=torch.int64))
+            masks.append(self.process_segmentation(item['segmentation'], item['width'], item['height']))
+        targets = {
+            'boxes': torch.stack(boxes, dim=0),
+            'labels': torch.stack(labels, dim=0),
+            'masks': torch.stack(masks, dim=0),
+            'width': self.width,
+            'height': self.height,
+        }
+        return targets
 
 class FlattenTF(Transform):
     def __init__(self) -> None:
@@ -29,6 +87,7 @@ class ReadImageTF(Transform):
     
     def __call__(self, path):
         if self.mode == 'PIL':
+            #print(f'Read Image: {path}')
             image = Image.open(path)
             return image.convert("RGB")
             

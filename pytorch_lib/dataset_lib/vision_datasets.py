@@ -1,13 +1,16 @@
-import os,sys,json,pathlib,shutil
+import os,sys,json,pathlib,shutil,torch
 import pandas as pd
+import numpy as np
 from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor,Compose,Resize
 from abc import ABC, abstractmethod
 from tqdm import tqdm
+from pathlib import Path
 
-from .dataset import DatasetLoader
+from .dataset import DatasetLoader,CustomDataset
 from ..utility import save_dataset_images
+from ..transform_lib.transform import COCOTargetsTF
 
 class VisionDataset(ABC):
     def __init__(self) -> None:
@@ -199,12 +202,119 @@ class ImageNetRC:
 class COCO:
     def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor()) -> None:
         self.root = dataset_path
-        self.training_data = datasets.CocoDetection(root=self.root + '/train2017', annFile=self.root + '/annotations/instances_train2017.json', transform=training_transform)
-        self.test_data = datasets.CocoDetection(root=self.root + '/val2017', annFile=self.root + '/annotations/instances_val2017.json', transform=test_transform)
+        self.train_dataset = datasets.CocoDetection(root=self.root + '/train2017', annFile=self.root + '/annotations/instances_train2017.json', transform=training_transform)
+        self.test_dataset = datasets.CocoDetection(root=self.root + '/val2017', annFile=self.root + '/annotations/instances_val2017.json', transform=test_transform)
         self.name = 'COCO'
         print('Dataset: ',self.name)
     
-    def loaders(self,batch_size=64):
-        train_dataloader = DataLoader(self.training_data, batch_size = batch_size)
-        test_dataloader = DataLoader(self.test_data, batch_size = batch_size)
+    def get_loaders(self,batch_size=64):
+        train_dataloader = DataLoader(self.train_dataset, batch_size = batch_size,collate_fn=lambda batch: list(zip(*batch)))
+        test_dataloader = DataLoader(self.test_dataset, batch_size = batch_size, collate_fn=lambda batch: list(zip(*batch)))
+        return train_dataloader,test_dataloader
+
+    def wrap_dataset_for_transforms(self):
+        self.train_dataset = datasets.wrap_dataset_for_transforms_v2(self.train_dataset, target_keys=["boxes", "labels", "masks"])
+        self.test_dataset = datasets.wrap_dataset_for_transforms_v2(self.test_dataset, target_keys=["boxes", "labels", "masks"])
+
+def coco_targets_transforms(annotations):
+    print(annotations)
+    input()
+    masks = []
+    boxes = []
+    labels = []
+    for annotation in annotations:
+        if 'boxes' in annotation:
+            boxes.append(torch.tensor(annotation['boxes'], dtype=torch.float32))
+        else:
+            boxes.append(torch.tensor([], dtype=torch.float32))
+        
+        if 'labels' in annotation:
+            labels.append(torch.tensor(annotation['labels'], dtype=torch.int64))
+        else:
+            labels.append(torch.tensor([], dtype=torch.int64))
+        
+        if 'masks' in annotation:
+            masks.append(torch.tensor(annotation['masks'], dtype=torch.bool))
+        else:
+            masks.append(torch.tensor([], dtype=torch.bool))
+    
+    return {'boxes': boxes, 'labels': labels, 'masks': masks}
+
+class COCOCustom:
+    def __init__(self,dataset_path,training_transform=ToTensor(),test_transform=ToTensor(),image_size=(480, 640)) -> None:
+        self.root = dataset_path
+        self.preprocess_annotations()
+        self.train_data = []
+        self.train_targets = []
+        self.test_data = []
+        self.test_targets = []
+        for key in self.train_annotations.keys():
+            self.train_data += [self.root + '/train2017/' + key]
+            self.train_targets.append(self.train_annotations[key]['annotations'])
+        for key in self.val_annotations.keys():
+            self.test_data += [self.root + '/val2017/' + key]
+            self.test_targets.append(self.val_annotations[key]['annotations'])
+        self.train_data = np.array(self.train_data)
+        self.test_data = np.array(self.test_data)
+        
+        # key = '000000397133.jpg'
+        # print(self.val_annotations[key]['annotations'])
+        # print(len(self.val_annotations[key]['annotations']))
+        # print()
+        # input()
+        
+        self.train_dataset = CustomDataset(data=self.train_data, targets=self.train_targets,data_transforms=training_transform,targets_transforms=COCOTargetsTF(image_size[0], image_size[1]))
+        self.test_dataset = CustomDataset(data=self.test_data, targets=self.test_targets,data_transforms=test_transform,targets_transforms=COCOTargetsTF(image_size[0], image_size[1]))
+        self.name = 'COCOCustom'
+        print('Dataset: ',self.name)
+    
+    def preprocess_annotations(self):
+        def process_cell(original_annotations,subset):
+            new_annotations = {}
+            for i in range(len(original_annotations['images'])):
+                file_name = original_annotations['images'][i]['file_name']
+                if not os.path.isfile(os.path.join(self.root + f'/{subset}2017', file_name)): continue
+                width = original_annotations['images'][i]['width']
+                height = original_annotations['images'][i]['height']
+                new_annotations[file_name] = {'annotations': [], 'width': width, 'height': height}
+
+            for i in tqdm(range(len(original_annotations['annotations']))):
+                file_name = f'{original_annotations["annotations"][i]["image_id"]:012d}.jpg'
+                if file_name not in new_annotations: continue
+                
+                annotations = {}
+                height = new_annotations[file_name]['height']
+                width = new_annotations[file_name]['width']
+                annotations['labels'] = [original_annotations['annotations'][i]['category_id']]
+                annotations['height'] = height
+                annotations['width'] = width
+
+                box = original_annotations['annotations'][i]['bbox']
+                box[0], box[1], box[2], box[3] = box[0] / width, box[1] / height, box[2] / width, box[3] / height
+                annotations['boxes'] = box
+
+                annotations['segmentation'] = original_annotations['annotations'][i]['segmentation']
+                
+                new_annotations[file_name]['annotations'].append(annotations)
+            return new_annotations
+
+        #if True:
+        if not os.path.isfile(self.root + '/annotations_2017.json'):
+            print('Processing annotations...')
+            with open(self.root + '/annotations/instances_train2017.json', 'r') as file: train_annotations_original = json.load(file)
+            with open(self.root + '/annotations/instances_val2017.json', 'r') as file: val_annotations_original = json.load(file)
+            self.train_annotations = process_cell(train_annotations_original,'train')
+            self.val_annotations = process_cell(val_annotations_original,'val')
+            json.dump({'train': self.train_annotations, 'val': self.val_annotations}, open(self.root + '/annotations_2017.json', 'w'))
+            print(f'Annotations saved to {self.root}/annotations_2017.json')
+
+        else:
+            with open(self.root + '/annotations_2017.json', 'r') as file: annotations = json.load(file)
+            self.train_annotations = annotations['train']
+            self.val_annotations = annotations['val']
+            print(f'Annotations loaded from {self.root}/annotations_2017.json')
+    
+    def get_loaders(self,batch_size=64):
+        train_dataloader = DataLoader(self.train_dataset, batch_size = batch_size,collate_fn=lambda batch: list(zip(*batch)))
+        test_dataloader = DataLoader(self.test_dataset, batch_size = batch_size, collate_fn=lambda batch: list(zip(*batch)))
         return train_dataloader,test_dataloader

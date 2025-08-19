@@ -158,8 +158,8 @@ class Net():
                 performance += self.loss.calculate_performance(pred,y)
             loss /= num_batches
             performance /= size
-            return self.loss.is_better(performance,loss,self.basic_info['best_validate_performance'],self.basic_info['best_validate_loss']), performance, loss
-            #return correct >= self.basic_info['best_validate_performance'], correct, test_loss
+        return self.loss.is_better(performance,loss,self.basic_info['best_validate_performance'],self.basic_info['best_validate_loss']), performance, loss
+        #return correct >= self.basic_info['best_validate_performance'], correct, test_loss
     
     def get_confusion_matrix(self,dataloader:torch.utils.data.DataLoader, classes:{},path:str,name:str=''):
         self.net.eval()

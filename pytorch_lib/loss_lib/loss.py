@@ -4,28 +4,7 @@ import torch.nn.functional as F
 from pytorch_lib.utility import SimilarityCalculator
 from abc import ABC,abstractmethod
 
-class Criterion(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        
-    @abstractmethod
-    def calculate_performance(self):pass
-    
-    @abstractmethod
-    def calculate_loss(self):pass
-    
-    def is_better(self,current_performance,current_loss,best_performance,best_loss):
-        if current_performance > best_performance: return True
-        elif current_performance == best_performance and current_loss < best_loss: return True
-        else: return False
-    
-    def print_result(self,val_performance,val_loss,test_performance,test_loss,
-                     best_val_performance,best_val_loss,best_test_performance,best_test_loss):
-        print(f"Validate: \n Performance: {(100*val_performance):>0.2f}%, Avg loss: {val_loss:>8f} \n")
-        print(f"Test: \n Performance: {(100*test_performance):>0.2f}%, Avg loss: {test_loss:>8f} \n")
-        print(f"Best Validate: \n Performance: {(100*best_val_performance):>0.2f}%, Avg loss: {best_val_loss:>8f} \n")
-        print(f"Best Test: \n Performance: {(100*best_test_performance):>0.2f}%, Avg loss: {best_test_loss:>8f} \n")
+from .criterion import Criterion
 
 class IntegratorLoss_old(Criterion):
     def __init__(self,dis_func = 'L1') -> None:
@@ -297,46 +276,6 @@ class CosEmLoss(Criterion):
     def calculate_loss(self,pred,label):
         pred_1,pred_2 = pred
         return self.loss_fn(pred_1,pred_2,label)
-
-class CELoss(Criterion):
-    def __init__(self,label_smoothing=0) -> None:
-        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
-        
-    def calculate_performance(self,pred,label):
-        pred = F.softmax(pred,dim=1)
-        return (pred.argmax(1) == label).type(torch.float).sum().item()
-    
-    def calculate_loss(self,pred,label):
-        return self.loss_fn(pred,label)
-
-class MSELoss(Criterion):
-    def __init__(self) -> None:
-        self.loss_fn = nn.MSELoss()
-    
-    def calculate_performance(self,pred,label):
-        distance = torch.cdist(pred,label,p=2)
-        performance = torch.exp(torch.neg(torch.mean(distance)))
-        return performance
-    
-    def calculate_loss(self,pred,label):
-        return self.loss_fn(pred,label)
-
-class MSELoss_Binary(Criterion):
-    def __init__(self) -> None:
-        self.loss_fn = nn.MSELoss()
-        self.threshold = 0.5
-    
-    def calculate_performance(self,pred,label):
-        temp_p = torch.zeros((len(label),1))
-        if torch.any(pred>self.threshold):
-            temp_p[pred>self.threshold] = 1.0
-        pred = temp_p
-        correct = ((pred>self.threshold) == (label>self.threshold)).type(torch.float).sum().item()
-        return correct
-    
-    def calculate_loss(self,pred,label):
-        loss = self.loss_fn(pred.view(-1),label.float())
-        return loss
 
 class KLLoss(Criterion):
     def __init__(self) -> None:
